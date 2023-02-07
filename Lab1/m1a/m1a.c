@@ -52,10 +52,13 @@ static void delay_loop(int32_t loops)
 int main(void)
 {
    //Per STM32L452RE Data Sheet, Default Clock is 4MHz P.34
+   //Enable GPIOA Clock
     rcc_periph_clock_enable(RCC_GPIOA);
+    //Setup Ports for LED2
     gpio_mode_setup(LED2_GPIO_Port, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, LED2_Pin);
     while(1)
     {
+      //Toggle GPIOA5
        gpio_toggle(LED2_GPIO_Port, LED2_Pin);
        //Original Value = 400000
        //Original Period = 1s

@@ -15,14 +15,15 @@
 static void clock_setup(void)
 {
 	// USE THE HSI16
-	rcc_osc_on(     FILL_IN_WITH_APPROPRIATE_CONSTANTS    );
+	rcc_osc_on(RCC_HSI16);
 	
+	//Enable the prefetch buffer and set flash wait states to 4
 	flash_prefetch_enable();
 	flash_set_ws(4);
 	flash_dcache_enable();
 	flash_icache_enable();
-	/* setup for 80MHz main pll  */
-	rcc_set_main_pll(  FILL_IN_WITH_APPROPRIATE_CONSTANTS  );
+	/* setup for 80MHz main pll  */ //in progress
+	rcc_set_main_pll(RCC_PLLCFGR_PLLSRC_HSI16);
 	rcc_osc_on(RCC_PLL);
 	/* either rcc_wait_for_osc_ready() or do other things */
 
