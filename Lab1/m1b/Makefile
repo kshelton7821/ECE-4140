@@ -47,8 +47,8 @@ BUILD_DIR = build
 
 # Do not modify these paths
 ifdef CPATH
-  CM3_DIR = /home/tyler/Documents/Github/libopencm3
-  GCC_PATH = /home/tyler/gcc-arm-none-eabi-10.3-2021.10/bin
+  CM3_DIR = /home/triston/libopencm3
+  GCC_PATH = /home/triston/gcc-arm-none-eabi-10.3-2021.10/bin
 else
   # Your paths here
   CM3_DIR = /home/kshelton/Documents/GitHub/libopencm3
