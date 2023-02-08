@@ -27,7 +27,7 @@ endif
 ######################################
 all: $(TARGET)
 
-TARGET = m1a
+TARGET = m1b
 
 ######################################
 # building variables
@@ -60,7 +60,7 @@ endif
 ######################################
 # C sources
 C_SOURCES =  \
-src/m1a.c \
+src/m1b.c \
 
 
 # ASM sources
