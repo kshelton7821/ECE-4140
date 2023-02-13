@@ -31,6 +31,7 @@ Ans: We know that a delay of 400000 cycles is 1 second. We want 1/7 of a second 
 Revisions:
 01ks 2-2-2023 Add commments about clock speed and NOP cycle time.
 02ks 2-6-2023 Change Period to 1/7 of a second and add values.
+03ks 2-13-2023 Add comments about delay_loop() and change period to 1/7 of a second.
 */
 #ifndef STM32L4
    #define STM32L4
@@ -66,7 +67,7 @@ int main(void)
       //Toggle GPIOA5
        gpio_toggle(LED2_GPIO_Port, LED2_Pin);
        //Original Value = 400000
-       //Original Period = 1s 57143
+       //Original Period = 1s, 1/7 of a second = 57143
        delay_loop(57143);
     }
 }

@@ -14,6 +14,7 @@ Ans: We can see in the .lst file that the delay cycle is loaded as a word. This 
 
 Revisions:
 01ks 2-7-2023 Finish Main, Setup PLL and GPIO
+02ks 2-13-2023 Add comments about clock speed and NOP cycle time.
 */
 #ifndef STM32L4
    #define STM32L4
