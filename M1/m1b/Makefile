@@ -52,7 +52,7 @@ ifdef CPATH
 else
   # Your paths here
   CM3_DIR = /home/kshelton/Documents/GitHub/libopencm3
-  GCC_PATH = /home/kshelton/Documents/RandCode/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin
+  #GCC_PATH = /home/kshelton/Documents/RandCode/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin
 endif
 
 ######################################
