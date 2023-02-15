@@ -1,0 +1,53 @@
+//Functions that need worked on
+
+static void usart_setup(void)
+{
+   /* DO NOT USE INTERRUPTS IN THIS DESIGN */
+
+   /* Setup GPIO pins for USART */
+	gpio_mode_setup();
+   	gpio_mode_setup();
+   	gpio_set_output_options();
+	
+   /* Setup USART pins as alternate function. */
+	gpio_set_af();   // you did set any peripherals using
+   	gpio_set_af();   // an external pin to be AF, right?
+
+	/* Setup UART parameters. */
+	usart_set_baudrate();
+	usart_set_databits();  // check the effect of parity on this fcn.
+	usart_set_stopbits();
+	usart_set_mode();
+	usart_set_parity();
+	usart_set_flow_control();
+
+}
+
+static void timer_setup(void)
+{
+   /* DO NOT USE INTERRUPTS IN THIS DESIGN */
+
+   /* Setup GPIO pins associated with timer functionality */
+   // You can maniuplate the pins as GPIO directly on timer
+   //   expiration. It may be possible to use an alternate
+   //   function pin depending on which pin is connected to
+   //   your external hardware.
+	gpio_mode_setup();
+   	gpio_mode_setup();
+   	gpio_set_output_options();
+	
+   /* If you go the AF route, then don't figure to configure AF. */
+	gpio_set_af();   
+
+   /* Setup timer parameters. */
+	usart_set_baudrate();
+	usart_set_databits();  // check the effect of parity on this fcn.
+	usart_set_stopbits();
+	usart_set_mode();
+	usart_set_parity();
+	usart_set_flow_control();
+
+}
+
+// Below is a standard template for just about any embedded
+//  system main() loop. 
