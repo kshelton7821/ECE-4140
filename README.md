@@ -5,3 +5,5 @@ Main Repository for ECE-4140 related projects and HW
 Contains all files necessary for M1
 ### M2
 Contains all files necessary for M2
+### M3
+Contains all files necessary for M3
