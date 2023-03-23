@@ -1,9 +1,13 @@
-# ECE-4140
-Main Repository for ECE-4140 related projects and HW
-## Directory Map
-### M1
-Contains all files necessary for M1
-### M2
-Contains all files necessary for M2
-### M3
-Contains all files necessary for M3
+# Resistor
+Team Resistor REPO
+
+# We are the resistance.
+# Directory Map
+## M1
+Contains all relevant files for Milestone 1
+## M2
+Contains all relevant files for Milestone 2
+## M3
+Contains all relevant files for Milestone 3
+## M4
+Contains all relevant files for Milestone 4
