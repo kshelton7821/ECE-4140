@@ -27,7 +27,7 @@ endif
 ######################################
 all: $(TARGET)
 
-TARGET = m4
+TARGET = barrier
 
 ######################################
 # building variables
@@ -62,9 +62,7 @@ endif
 ######################################
 # C sources
 C_SOURCES =  \
-src/m4.c \
-src/circbuffer.c \
-src/vigenere.c \
+src/barrier.c \
 $(ESOS_DIR)/src/esos.c \
 $(ESOS_DIR)/src/esos_cb.c \
 $(ESOS_DIR)/src/esos_utils.c \

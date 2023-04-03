@@ -1,14 +1,17 @@
 /*
 Author: Keaton Shelton
+Date: 3/22/2023
 Abstract:
-   This is a simple program to use the UART system to send a message to the PC.
+   This is a program that will encrypt and decrypt messages using the Vigenere Cipher using
+   the ESOS framework.
 
 
 Questions:
-
+n/a
 
 Revisions:
 01ks 3/22/2023: Original
+02ks 4/2/2023: Added comments and cleaned up code
 */
 //************** I N C L U D E S *****************
 #include "embsysS20.h"
@@ -17,7 +20,7 @@ Revisions:
 //#include "esos32/include/esos.h"
 //#include "esos32/include/stm32l4_ocm3/esos_stm32l4.h"
 #include "esos.h"
-#include "esos_stm32l4.h"
+#include "stm32l4_ocm3/esos_stm32l4.h"
 
 //************** G L O B A L S *****************
 #define CB_SIZE 256
