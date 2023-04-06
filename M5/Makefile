@@ -27,7 +27,7 @@ endif
 ######################################
 all: $(TARGET)
 
-TARGET = m4
+TARGET = app
 
 ######################################
 # building variables
@@ -62,9 +62,11 @@ endif
 ######################################
 # C sources
 C_SOURCES =  \
-src/m4.c \
+src/app.c \
 src/circbuffer.c \
 src/vigenere.c \
+src/keypad.c \
+src/opmode.c \
 $(ESOS_DIR)/src/esos.c \
 $(ESOS_DIR)/src/esos_cb.c \
 $(ESOS_DIR)/src/esos_utils.c \

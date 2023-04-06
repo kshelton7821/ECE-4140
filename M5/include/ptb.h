@@ -19,6 +19,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+//Libopencm3
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
@@ -27,6 +28,11 @@
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/timer.h>
 
+//ESOS
+#include "esos.h"
+#include "stm32l4_ocm3/esos_stm32l4.h"
+
+//C Standard
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -38,9 +44,9 @@
 void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 //Bus Defines
-#define RCC_AHB 80e6
-#define RCC_APB1 80e6
-#define RCC_APB2 80e6
+//#define RCC_AHB 80e6
+//#define RCC_APB1 80e6
+//#define RCC_APB2 80e6
 
 //PLL Val Defines
 #define PLLM_Val 4 //PLLM Divider Only vals 1-8
@@ -57,11 +63,11 @@ void Error_Handler(void);
 #define NUCLEO_LED2_GET()       gpio_get(NUCLEO_LED2_Port, NUCLEO_LED2_Pin)
 
 //Button B1
-#define NUCLEO_BUTTON_PORT      GPIOC
-#define NUCLEO_BUTTON_PIN       GPIO13
-#define NUCLEO_BUTTON_PORT_RCC  GPIOC
-#define NUCLEO_BUTTON_SETUP()   gpio_mode_setup(NUCLEO_BUTTON_PORT,GPIO_MODE_INPUT,GPIO_PUPD_NONE,NUCLEO_BUTTON_PIN)
-#define NUCLEO_BUTTON_PUSHED()  !gpio_get(NUCLEO_BUTTON_PORT,NUCLEO_BUTTON_PIN)
+#define NUCLEO_BUTTON_PORT          GPIOC
+#define NUCLEO_BUTTON_PIN           GPIO13
+#define NUCLEO_BUTTON_PORT_RCC      GPIOC
+#define NUCLEO_BUTTON_SETUP()       gpio_mode_setup(NUCLEO_BUTTON_PORT,GPIO_MODE_INPUT,GPIO_PUPD_NONE,NUCLEO_BUTTON_PIN)
+#define NUCLEO_BUTTON_PUSHED()      !gpio_get(NUCLEO_BUTTON_PORT,NUCLEO_BUTTON_PIN)
 
 
 //USART Defines
@@ -70,6 +76,11 @@ void Error_Handler(void);
 #define USART2_TX_GPIO_Port     GPIOA
 #define USART2_RX_GPIO_Port     GPIOA
 #define USART2_AF               GPIO_AF7
+
+//RCC Setup
+#define GPIOA_SETUP_RCC()       rcc_periph_clock_enable(RCC_GPIOA)
+#define GPIOB_SETUP_RCC()       rcc_periph_clock_enable(RCC_GPIOB)
+#define GPIOC_SETUP_RCC()       rcc_periph_clock_enable(RCC_GPIOC)
 
 //********************************** E D U B A S E **********************************
 //LEDs
@@ -113,20 +124,15 @@ void Error_Handler(void);
 #define EDUB_SW5_PORT           GPIOB
 #define EDUB_SW5_PIN            GPIO8
 
-//Button Setups
-#define EDUB_SW2_SETUP()        gpio_mode_setup(EDUB_SW2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW2_PIN)
-#define EDUB_SW3_SETUP()        gpio_mode_setup(EDUB_SW3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW3_PIN)
-#define EDUB_SW4_SETUP()        gpio_mode_setup(EDUB_SW4_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW4_PIN)
-#define EDUB_SW5_SETUP()        gpio_mode_setup(EDUB_SW5_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW5_PIN)
 
-//Button Macros
-#define EDUB_SW2_ENABLE()      gpio_mode_setup(EDUB_SW2_PORT,GPIO_MODE_INPUT,GPIO_PUPD_NONE,EDUB_SW2_PIN)
+//Button Macros - 
+#define EDUB_SW2_SETUP()       gpio_mode_setup(EDUB_SW2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW2_PIN)
+#define EDUB_SW3_SETUP()       gpio_mode_setup(EDUB_SW3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW3_PIN)
+#define EDUB_SW4_SETUP()       gpio_mode_setup(EDUB_SW4_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW4_PIN)
+#define EDUB_SW5_SETUP()       gpio_mode_setup(EDUB_SW5_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, EDUB_SW5_PIN)
 #define EDUB_SW2_PUSHED()      gpio_get(EDUB_SW2_PORT,EDUB_SW2_PIN)
-#define EDUB_SW3_ENABLE()      gpio_mode_setup(EDUB_SW3_PORT,GPIO_MODE_INPUT,GPIO_PUPD_NONE,EDUB_SW3_PIN)
 #define EDUB_SW3_PUSHED()      gpio_get(EDUB_SW3_PORT,EDUB_SW3_PIN)
-#define EDUB_SW4_ENABLE()      gpio_mode_setup(EDUB_SW4_PORT,GPIO_MODE_INPUT,GPIO_PUPD_NONE,EDUB_SW4_PIN)
 #define EDUB_SW4_PUSHED()      gpio_get(EDUB_SW4_PORT,EDUB_SW4_PIN)
-#define EDUB_SW5_ENABLE()      gpio_mode_setup(EDUB_SW5_PORT,GPIO_MODE_INPUT,GPIO_PUPD_NONE,EDUB_SW5_PIN)
 #define EDUB_SW5_PUSHED()      gpio_get(EDUB_SW5_PORT,EDUB_SW5_PIN)
 
 //Keypad Defines
