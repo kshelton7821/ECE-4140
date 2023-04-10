@@ -329,7 +329,7 @@ ESOS_CHILD_TASK(removeNonAlpha, uint8_t u8t_dataIN)
 {
     ESOS_TASK_BEGIN();
     //If so, check if it is alpha
-    if(isalpha(u8t_dataIN))
+    if(isalpha(u8t_dataIN) || isdigit(u8t_dataIN))
     {
         //Push to outbound buffer
         pushBuffer(&cb_send, u8t_dataIN);
