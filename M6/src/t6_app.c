@@ -12,12 +12,14 @@
 * Revisions:
 * 01ks 4/5/2023: Initial Revision
 * 02ks 4/12/2023: Change M6 intro, possibly fix stupid List Period bug
+* 03KS 4/12/2023: Add is ESOS SUI Stuff
 */
 //******************** I N C L U D E S ***************************************
 #include "ptb.h"
 #include "vigenereH.h"
 #include "circbufferH.h"
 #include "opmode.h"
+#include "esos_stm32l4_ptb_sui.h"
 //
 //
 //
@@ -53,16 +55,28 @@ uint32_t volatile u32t_led1_period = 1000;
 uint32_t volatile u32t_led2_period = 1000;
 uint32_t volatile u32t_led3_period = 1000;
 uint32_t volatile u32t_nucleoLED2_period = 1000;
+
+//Timer Periods Half
+uint32_t volatile u32t_led0_period_half = 500;
+uint32_t volatile u32t_led1_period_half = 500;
+uint32_t volatile u32t_led2_period_half = 500;
+uint32_t volatile u32t_led3_period_half = 500;
+uint32_t volatile u32t_nucleoLED2_period_half = 500;
+
 //Trackers
 uint8_t volatile u8t_commandCounter = 0;
 uint8_t volatile u8t_arrTracker = 0;
 uint8_t volatile u8tArr_periodSet[4] = {0, 0, 0, 0};
 
+//Show Period Array
 char volatile u8tArr_showPeriod[4] = {'0', '0', '0', '0'};
 
 
 //Encryption State / Other Mode Bools.
 bool volatile b_encrypt = false, b_decrypt = false, b_toUpper = false, b_rmNonAlpha = false, b_echo = false, b_commandMode = false, b_commandSetPeriod = false, b_commandListPeriod = false;
+
+//Booleans for Running LED's at half speed
+bool volatile b_led0_half = false, b_led1_half = false, b_led2_half = false, b_led3_half = false;
 
 //Operating Mode
 st_opmode volatile opmode;
@@ -71,12 +85,28 @@ uint8_t volatile u8t_mode = OPMODE_ECHO;
 //
 //
 //
-//******************** E S O S  T I M E R  H A N D L E S **********************
+//******************** E S O S  H A N D L E S **********************
 ESOS_TMR_HANDLE tmr_handle_LED0, tmr_handle_LED1, tmr_handle_LED2, tmr_handle_LED3, tmr_handle_nucleoLED2, tmr_handle_commandMode;
+ESOS_SUI_LED_HANDLE h_LED0, h_LED1, h_LED2, h_LED3, h_LED4;
+ESOS_SUI_SWITCH_HANDLE h_SW1, h_SW2, h_SW3, h_SW4, h_SW5;
 //
 //
 //
 //
+//******************** E S O S  D E F I N E S *********************************
+//LED Defines
+_st_esos_sui_LED NUCELO_LED2;
+_st_esos_sui_LED EDUB_LED3;
+_st_esos_sui_LED EDUB_LED2;
+_st_esos_sui_LED EDUB_LED1;
+_st_esos_sui_LED EDUB_LED0;
+
+//SWITCH Defines
+_st_esos_sui_Switch NUCLEO_SW1;
+_st_esos_sui_Switch EDUB_SW2;
+_st_esos_sui_Switch EDUB_SW3;
+_st_esos_sui_Switch EDUB_SW4;
+_st_esos_sui_Switch EDUB_SW5;
 //******************** F U N C T I O N S **************************************
 
 
@@ -249,6 +279,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             if(u8t_led == 0)
             {
                 u32t_led0_period = atoi(u8tArr_periodSet);
+                u32t_led0_period_half = u32t_led0_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period);
                 
 
@@ -268,6 +299,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             else if(u8t_led == 1)
             {
                 u32t_led1_period = atoi(u8tArr_periodSet);
+                u32t_led1_period_half = u32t_led1_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period);
 
                 //Send LED1 Period
@@ -286,6 +318,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             else if(u8t_led == 2)
             {
                 u32t_led2_period = atoi(u8tArr_periodSet);
+                u32t_led2_period_half = u32t_led2_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period);
 
                 //Send LED2 Period
@@ -304,6 +337,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             else if(u8t_led == 3)
             {
                 u32t_led3_period = atoi(u8tArr_periodSet);
+                u32t_led3_period_half = u32t_led3_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period);
 
                 //Send LED3 Period
@@ -322,6 +356,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             else if(u8t_led == 4)
             {
                 u32t_nucleoLED2_period = atoi(u8tArr_periodSet);
+                u32t_nucleoLED2_period_half = u32t_nucleoLED2_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_nucleoLED2, u32t_nucleoLED2_period);
 
                 //Send Nucleo LED2 Period
@@ -487,8 +522,34 @@ ESOS_USER_TASK(modeSelect)
     while(1)
     {
         //If in command mode
-        if(NUCLEO_BUTTON_PUSHED())
+        if(!esos_hw_sui_isSwitchPressed(h_SW1))
         {
+            //Check for other switches
+            if(esos_hw_sui_isSwitchPressed(h_SW2))
+            {
+                b_led3_half = true;
+            }
+            else if (esos_hw_sui_isSwitchPressed(h_SW3))
+            {
+                b_led2_half = true;
+            }
+            else if (esos_hw_sui_isSwitchPressed(h_SW4))
+            {
+                b_led1_half = true;
+            }
+            else if (esos_hw_sui_isSwitchPressed(h_SW5))
+            {
+                b_led0_half = true;
+            }
+            else
+            {
+                //Reset
+                b_led0_half = false;
+                b_led1_half = false;
+                b_led2_half = false;
+                b_led3_half = false;
+            }
+
             //Check if previously in command mode
             if(!b_commandMode)
             {
@@ -514,7 +575,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(EDUB_SW2_PUSHED())
+        else if(esos_hw_sui_isSwitchPressed(h_SW2))
         {
             //Check if previously in rmNonAlpha mode
             if(!b_rmNonAlpha)
@@ -543,7 +604,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(EDUB_SW3_PUSHED())
+        else if(esos_hw_sui_isSwitchPressed(h_SW3))
         {
             //Check if previously in toUpper mode
             if(!b_toUpper)
@@ -572,7 +633,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(EDUB_SW4_PUSHED())
+        else if(esos_hw_sui_isSwitchPressed(h_SW4))
         {
             //Check if previously in encrypt mode
             if(!b_encrypt)
@@ -602,7 +663,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(EDUB_SW5_PUSHED())
+        else if(esos_hw_sui_isSwitchPressed(h_SW5))
         {
             //Check if previously in decrypt mode
             if(!b_decrypt)
@@ -662,7 +723,31 @@ ESOS_USER_TASK(modeSelect)
 
             ESOS_TASK_YIELD();
         }
-        
+        if(b_led0_half && esos_hw_sui_isSwitchPressed(h_SW5) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        {
+            esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period_half);
+        }            
+        else if(b_led1_half && esos_hw_sui_isSwitchPressed(h_SW4) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        {
+            esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period_half);
+        }
+        else if(b_led2_half && esos_hw_sui_isSwitchPressed(h_SW3) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        {
+            esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period_half);
+        }
+        else if(b_led3_half && esos_hw_sui_isSwitchPressed(h_SW2) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        {
+            esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period_half);
+        }
+        else
+        {
+            esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period);
+            esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period);
+            esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period);
+            esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period);
+        }
+
+
         ESOS_TASK_YIELD();
     }
     ESOS_TASK_END();
@@ -676,35 +761,35 @@ ESOS_USER_TASK(modeSelect)
 ESOS_USER_TIMER(led0)
 {
     //Toggle LED0
-    EDUB_LED0_TOGGLE();
+    esos_hw_sui_toggleLED(h_LED0);
 }
 
 //LED1 Timer
 ESOS_USER_TIMER(led1)
 {
     //Toggle LED1
-    EDUB_LED1_TOGGLE();
+    esos_hw_sui_toggleLED(h_LED1);
 }
 
 //LED2 Timer
 ESOS_USER_TIMER(led2)
 {
     //Toggle LED2
-    EDUB_LED2_TOGGLE();
+    esos_hw_sui_toggleLED(h_LED2);
 }
 
 //LED3 Timer
 ESOS_USER_TIMER(led3)
 {
     //Toggle LED3
-    EDUB_LED3_TOGGLE();
+    esos_hw_sui_toggleLED(h_LED3);
 }
 
 //Nucleo LED2 Timer
 ESOS_USER_TIMER(nucleoLED2)
 {
     //Toggle Nucleo LED2
-    NUCLEO_LED2_TOGGLE();
+    esos_hw_sui_toggleLED(h_LED4);
 }
 
 //This for some reason would not work, honestly no reason why it shouldn't since its right but its 4:48am and I'm tired
@@ -729,14 +814,68 @@ ESOS_USER_TIMER(commandMode)
 //******************** I N I T  F U N C T I O N S *****************************
 void hw_init(void)
 {
+    //ESOS HW setup
+    //Define LEDs
+    NUCELO_LED2.u32_userData1 = NUCLEO_LED2_Port;
+    NUCELO_LED2.u32_userData2 = NUCLEO_LED2_Pin;
+
+    EDUB_LED3.u32_userData1 = EDUB_LED3_PORT;
+    EDUB_LED3.u32_userData2 = EDUB_LED3_PIN;
+
+    EDUB_LED2.u32_userData1 = EDUB_LED2_PORT;
+    EDUB_LED2.u32_userData2 = EDUB_LED2_PIN;
+
+    EDUB_LED1.u32_userData1 = EDUB_LED1_PORT;
+    EDUB_LED1.u32_userData2 = EDUB_LED1_PIN;
+
+    EDUB_LED0.u32_userData1 = EDUB_LED0_PORT;
+    EDUB_LED0.u32_userData2 = EDUB_LED0_PIN;
+
+    //Define Buttons
+    NUCLEO_SW1.u32_userData1 = NUCLEO_BUTTON_PORT;
+    NUCLEO_SW1.u32_userData2 = NUCLEO_BUTTON_PIN;
+
+    EDUB_SW2.u32_userData1 = EDUB_SW2_PORT;
+    EDUB_SW2.u32_userData2 = EDUB_SW2_PIN;
+
+    EDUB_SW3.u32_userData1 = EDUB_SW3_PORT;
+    EDUB_SW3.u32_userData2 = EDUB_SW3_PIN;
+
+    EDUB_SW4.u32_userData1 = EDUB_SW4_PORT;
+    EDUB_SW4.u32_userData2 = EDUB_SW4_PIN;
+
+    EDUB_SW5.u32_userData1 = EDUB_SW5_PORT;
+    EDUB_SW5.u32_userData2 = EDUB_SW5_PIN;
+
+    //Register LEDs
+    h_LED0 = esos_sui_registerLED(EDUB_LED0.u32_userData1, EDUB_LED0.u32_userData2);
+    h_LED1 = esos_sui_registerLED(EDUB_LED1.u32_userData1, EDUB_LED1.u32_userData2);
+    h_LED2 = esos_sui_registerLED(EDUB_LED2.u32_userData1, EDUB_LED2.u32_userData2);
+    h_LED3 = esos_sui_registerLED(EDUB_LED3.u32_userData1, EDUB_LED3.u32_userData2);
+    h_LED4 = esos_sui_registerLED(NUCELO_LED2.u32_userData1, NUCELO_LED2.u32_userData2);
+
+    //Register Buttons
+    h_SW1 = esos_sui_registerSwitch(NUCLEO_SW1.u32_userData1, NUCLEO_SW1.u32_userData2);
+    h_SW2 = esos_sui_registerSwitch(EDUB_SW2.u32_userData1, EDUB_SW2.u32_userData2);
+    h_SW3 = esos_sui_registerSwitch(EDUB_SW3.u32_userData1, EDUB_SW3.u32_userData2);
+    h_SW4 = esos_sui_registerSwitch(EDUB_SW4.u32_userData1, EDUB_SW4.u32_userData2);
+    h_SW5 = esos_sui_registerSwitch(EDUB_SW5.u32_userData1, EDUB_SW5.u32_userData2);
+
     //Setup RCC for buttons and LEDs
     GPIOA_SETUP_RCC();
     GPIOB_SETUP_RCC();
     GPIOC_SETUP_RCC();
 
     //Nucleo HW setup
-    NUCLEO_BUTTON_SETUP();
-    NUCLEO_LED2_SETUP();
+    //NUCLEO_BUTTON_SETUP();
+    //NUCLEO_LED2_SETUP();
+
+    //Config LEDs
+    esos_hw_sui_configLED(h_LED0);
+    esos_hw_sui_configLED(h_LED1);
+    esos_hw_sui_configLED(h_LED2);
+    esos_hw_sui_configLED(h_LED3);
+    esos_hw_sui_configLED(h_LED4);
 
     //Eduboard Button Setup
     EDUB_KEYPAD_ROW0_SETUP();
@@ -747,16 +886,25 @@ void hw_init(void)
     EDUB_KEYPAD_COL1_SETUP();
     EDUB_KEYPAD_COL2_SETUP();
     EDUB_KEYPAD_COL3_SETUP();
-    EDUB_SW2_SETUP();
-    EDUB_SW3_SETUP();
-    EDUB_SW4_SETUP();
-    EDUB_SW5_SETUP();
+
+    //Config Buttons
+    esos_hw_sui_configSwitch(h_SW1);
+    esos_hw_sui_configSwitch(h_SW2);
+    esos_hw_sui_configSwitch(h_SW3);
+    esos_hw_sui_configSwitch(h_SW4);
+    esos_hw_sui_configSwitch(h_SW5);
+
+
+    //EDUB_SW2_SETUP();
+    //EDUB_SW3_SETUP();
+    //EDUB_SW4_SETUP();
+    //EDUB_SW5_SETUP();
 
     //Eduboard LED setup
-    EDUB_LED0_SETUP();
-    EDUB_LED1_SETUP();
-    EDUB_LED2_SETUP();
-    EDUB_LED3_SETUP();
+    //EDUB_LED0_SETUP();
+    //EDUB_LED1_SETUP();
+    //EDUB_LED2_SETUP();
+    //EDUB_LED3_SETUP();
 
 }
 

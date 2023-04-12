@@ -27,7 +27,7 @@ endif
 ######################################
 all: $(TARGET)
 
-TARGET = app
+TARGET = t6_app
 
 ######################################
 # building variables
@@ -62,13 +62,15 @@ endif
 ######################################
 # C sources
 C_SOURCES =  \
-src/app.c \
+src/t6_app.c \
 src/circbuffer.c \
 src/vigenere.c \
 src/keypad.c \
 src/opmode.c \
+local/esos_stm32l4_ptb_sui.c \
 $(ESOS_DIR)/src/esos.c \
 $(ESOS_DIR)/src/esos_cb.c \
+$(ESOS_DIR)/src/esos_sui.c \
 $(ESOS_DIR)/src/esos_utils.c \
 $(ESOS_DIR)/src/esos_comm.c \
 $(ESOS_DIR)/src/esos_mail.c \
@@ -135,6 +137,7 @@ AS_INCLUDES =
 # C includes
 C_INCLUDES =  \
 -Iinclude \
+-Ilocal \
 -I$(ESOS_DIR)/include \
 -I$(ESOS_DIR)/include/stm32l4_ocm3 \
 -I$(CM3_DIR)/include \

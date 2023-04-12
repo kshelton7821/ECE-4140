@@ -31,6 +31,7 @@
 //ESOS
 #include "esos.h"
 #include "stm32l4_ocm3/esos_stm32l4.h"
+#include "esos_sui.h"
 
 //C Standard
 #include <errno.h>

@@ -13,3 +13,5 @@ Contains all relevant files for Milestone 3
 Contains all relevant files for Milestone 4
 ## M5
 Contains all relevant files for Milestone 5
+## M6
+Contains all relevant files for Milestone 6
