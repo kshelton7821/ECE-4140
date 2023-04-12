@@ -10,7 +10,8 @@
 *
 *
 * Revisions:
-* 4/5/2023: Initial Revision
+* 01ks 4/5/2023: Initial Revision
+* 02ks 4/12/2023: Change M6 intro, possibly fix stupid List Period bug
 */
 //******************** I N C L U D E S ***************************************
 #include "ptb.h"
