@@ -1,3 +1,13 @@
+/*
+* Author: Keaton Shelton
+* Date: 2/16/2023
+*
+* Abstract: This is the header file for a circular buffer implementation along with a small test program
+*
+* Revisions:
+* 01ks 2/16/2023: Original
+* 02ks 2/23/2023: Final
+*/
 #ifndef __circbufferH_H
 #define __circbufferH_H
 

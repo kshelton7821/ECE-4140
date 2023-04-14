@@ -1,3 +1,14 @@
+/*
+* Author: Josh White
+* Date: 4/11/2023
+*
+* Abstract: This file contains the function declarations for the ESOS SUI
+*
+*
+*
+* Revisions:
+* 01jw - 4/11/2023 - Initial version
+*/
 // Use the templates provided in generic_hwxxxx.
 
 
