@@ -1,5 +1,5 @@
 /*
-* Author: Keaton Shelton
+* Authors: Keaton Shelton, Josh White, Emma Brown
 * Date: 4/3/2023
 * 
 * Abstract: This file contains the macros needed for EduBase board
@@ -8,7 +8,7 @@
 *
 * Revisions:
 * 01ks - 4/3/2023 - Initial file
-* 02ks, 01eb - 4/5/2023 - Finalize
+* 02ks, 02eb, 02jw - 4/5/2023 - Finalize
 */
 #ifndef PTB_H
 #define PTB_H

@@ -1,18 +1,17 @@
 /*
 * Authors: Keaton Shelton, Josh White, and Emma Brown
-* Team Members: Keaton Shelton, Josh White, Emma Brown, Jared Vega, and Cole 
 * Date: 4/5/2023
 *
 * Abstract: This is the main file for the M5 project. It contains the main program that
-*     that is an expanded version of M4. This time with EduBoard :)
+*     that is an expanded version of M4 and M5. This time with EduBoard :)
 *
 *
 *
 *
 * Revisions:
-* 01ks 4/5/2023: Initial Revision
+* 01ks, 01jw, 01eb 4/5/2023: Initial Revision
 * 02ks 4/12/2023: Change M6 intro, possibly fix stupid List Period bug
-* 03kS 4/12/2023: Add is ESOS SUI Stuff
+* 03ks, 03eb, 03jw 4/12/2023: Add is ESOS SUI Stuff
 * 04ks 4/13/2023: Implement OPMODE system for state selection
 */
 //******************** I N C L U D E S ***************************************
