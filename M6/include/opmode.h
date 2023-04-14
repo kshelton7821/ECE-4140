@@ -26,10 +26,10 @@
 
 
 typedef struct {
-    uint16_t u16t_SW1, u16t_SW2, u16t_SW3, u16t_SW4, u16t_SW5;
+    bool b_SW1, b_SW2, b_SW3, b_SW4, b_SW5;
 } st_opmode;
 
-void fnst_opmodeUpdate(st_opmode volatile *pst_opmode, uint16_t u16t_SW1, uint16_t u16t_SW2, uint16_t u16t_SW3, uint16_t u16t_SW4, uint16_t u16t_SW5);
+void fnst_opmodeUpdate(st_opmode volatile *pst_opmode, bool b_SW1, bool b_SW2, bool b_SW3, bool b_SW4, bool b_SW5);
 void fnst_opmodeInit(st_opmode volatile *pst_opmode);
 uint8_t fnst_opmodePriority(st_opmode volatile *pst_opmode);
 

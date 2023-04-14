@@ -12,7 +12,8 @@
 * Revisions:
 * 01ks 4/5/2023: Initial Revision
 * 02ks 4/12/2023: Change M6 intro, possibly fix stupid List Period bug
-* 03KS 4/12/2023: Add is ESOS SUI Stuff
+* 03kS 4/12/2023: Add is ESOS SUI Stuff
+* 04ks 4/13/2023: Implement OPMODE system for state selection
 */
 //******************** I N C L U D E S ***************************************
 #include "ptb.h"
@@ -521,8 +522,10 @@ ESOS_USER_TASK(modeSelect)
     ESOS_TASK_BEGIN();
     while(1)
     {
+        //Check the OPMODE
+
         //If in command mode
-        if(!esos_hw_sui_isSwitchPressed(h_SW1))
+        if(u8t_mode == OPMODE_KEYBOARD)
         {
             //Check for other switches
             if(esos_hw_sui_isSwitchPressed(h_SW2))
@@ -575,7 +578,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(esos_hw_sui_isSwitchPressed(h_SW2))
+        else if(u8t_mode == OPMODE_RM_NON_ALPHA)
         {
             //Check if previously in rmNonAlpha mode
             if(!b_rmNonAlpha)
@@ -604,7 +607,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(esos_hw_sui_isSwitchPressed(h_SW3))
+        else if(u8t_mode == OPMODE_TO_UPPER)
         {
             //Check if previously in toUpper mode
             if(!b_toUpper)
@@ -633,7 +636,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(esos_hw_sui_isSwitchPressed(h_SW4))
+        else if(u8t_mode == OPMODE_ENCRYPT)
         {
             //Check if previously in encrypt mode
             if(!b_encrypt)
@@ -663,7 +666,7 @@ ESOS_USER_TASK(modeSelect)
                 ESOS_TASK_YIELD();
             }
         }
-        else if(esos_hw_sui_isSwitchPressed(h_SW5))
+        else if(u8t_mode == OPMODE_DECRYPT)
         {
             //Check if previously in decrypt mode
             if(!b_decrypt)
@@ -793,20 +796,20 @@ ESOS_USER_TIMER(nucleoLED2)
 }
 
 //This for some reason would not work, honestly no reason why it shouldn't since its right but its 4:48am and I'm tired
-/*
+
 //Command Mode Timer
 ESOS_USER_TIMER(commandMode)
 {
-    uint8_t u8t_buttons[5] = {0,0,0,0,0};
-    u8t_buttons[0] = NUCLEO_BUTTON_PUSHED();
-    u8t_buttons[1] = EDUB_SW2_PUSHED();
-    u8t_buttons[2] = EDUB_SW3_PUSHED();
-    u8t_buttons[3] = EDUB_SW4_PUSHED();
-    u8t_buttons[4] = EDUB_SW5_PUSHED();
-    fnst_opmodeUpdate(&opmode, u8t_buttons[0], u8t_buttons[1], u8t_buttons[2], u8t_buttons[3], u8t_buttons[4]);
+    bool b_buttons[5] = {0,0,0,0,0};
+    b_buttons[0] = !esos_hw_sui_isSwitchPressed(h_SW1);
+    b_buttons[1] = esos_hw_sui_isSwitchPressed(h_SW2);
+    b_buttons[2] = esos_hw_sui_isSwitchPressed(h_SW3);
+    b_buttons[3] = esos_hw_sui_isSwitchPressed(h_SW4);
+    b_buttons[4] = esos_hw_sui_isSwitchPressed(h_SW5);
+    fnst_opmodeUpdate(&opmode, b_buttons[0], b_buttons[1], b_buttons[2], b_buttons[3], b_buttons[4]);
     u8t_mode = fnst_opmodePriority(&opmode);
 }
-*/
+
 //
 //
 //
@@ -929,5 +932,5 @@ void user_init(void)
     tmr_handle_LED2 = esos_RegisterTimer(led2, u32t_led2_period);
     tmr_handle_LED3 = esos_RegisterTimer(led3, u32t_led3_period);
     tmr_handle_nucleoLED2 = esos_RegisterTimer(nucleoLED2, u32t_nucleoLED2_period);
-    //tmr_handle_commandMode = esos_RegisterTimer(commandMode, 100);
+    tmr_handle_commandMode = esos_RegisterTimer(commandMode, 100);
 }
