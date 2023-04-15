@@ -46,7 +46,7 @@ void esos_hw_sui_toggleLED ( ESOS_SUI_LED_HANDLE h_LED ) {
     gpio_toggle(esos_sui_getLEDUserData1(h_LED), esos_sui_getLEDUserData2(h_LED));
 }
 
-// ESOS calls back to user to choose what switches needs initialization, SwitchUserData0-4 in this case
+// ESOS calls back to user to choose what switches needs initialization, SwitchUserData1-5 in this case
 void esos_hw_sui_configSwitch ( ESOS_SUI_SWITCH_HANDLE h_SWITCH ) {
     gpio_mode_setup(esos_sui_getSwitchUserData1(h_SWITCH), GPIO_MODE_INPUT, GPIO_PUPD_NONE, esos_sui_getSwitchUserData2(h_SWITCH));
 }
