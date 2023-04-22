@@ -33,17 +33,18 @@
 #define EDUB_LCDRS_PORT GPIOA
 #define EDUB_LCDE_PORT GPIOA
 
-//******************* L C D  S T R U C T S *******************
+//USE 4Bit
+#define ESOS_USE_LCD_4BIT 1
+
+//******************* L C D  R E L A T E D  S T R U C T S *******************
 //LCD MODE
-enum LCD_MODE 
-{
+enum LCD_MODE {
 STANDBY,
 EDIT,
 REPEAT
 };
 
-enum LED_SELECTED
-{
+enum LED_SELECTED {
 LED0,
 LED1,
 LED2,

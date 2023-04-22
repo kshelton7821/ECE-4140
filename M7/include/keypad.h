@@ -67,9 +67,12 @@
 //
 //************ P R O T O T Y P E S ************
 //Dr. Bruce' provided delay function
-void delay(void);
+void delay(uint16_t u16t_delay);
 
 //This function reads the keypad and returns a uint16_t containing the value of the key pressed by bitwise placement.
 uint16_t keypad_entry(void);
+
+//Interpret the uint16_t value from the keypad and return direct value, meant to be used with the keypad_entry() function
+char keypad_interpret(uint16_t u16t_keyVals);
 
 #endif

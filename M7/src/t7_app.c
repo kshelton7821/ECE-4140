@@ -20,6 +20,7 @@
 #include "vigenereH.h"
 #include "circbufferH.h"
 #include "opmode.h"
+#include "keypad.h"
 #include "esos_stm32l4_ptb_sui.h"
 #include "esos_stm32l4_edub.h"
 //
@@ -116,8 +117,126 @@ _st_esos_sui_Switch EDUB_SW3;
 _st_esos_sui_Switch EDUB_SW4;
 _st_esos_sui_Switch EDUB_SW5;
 //******************** F U N C T I O N S **************************************
+//Function to choose correct selected LED
 
+void selectLED(enum LED_SELECTED *LD_STATE, char tempKey) 
+{
+    bool update = false;
+    //Check up or down
+    if(*LD_STATE == LED0)
+    {
+        if (tempKey == 'B')
+        {
+            *LD_STATE = LED1;
+            return;
+        }
+        else
+        {
+            return;
+        }
+    }
+    else if(*LD_STATE == LED1)
+    {
+        if (tempKey == 'A')
+        {
+            *LD_STATE = LED0;
+            return;
+        }
+        else if (tempKey == 'B')
+        {
+            *LD_STATE = LED2;
+            return;
+        }
+        else
+        {
+            return;
+        }
+    }
+    else if(*LD_STATE == LED2)
+    {
+        if (tempKey == 'A')
+        {
+            *LD_STATE = LED1;
+            return;
+        }
+        else if (tempKey == 'B')
+        {
+            *LD_STATE = LED3;
+            return;
+        }
+        else
+        {
+            return;
+        }
+    }
+    else if(*LD_STATE == LED3)
+    {
+        if (tempKey == 'A')
+        {
+            *LD_STATE = LED2;
+            return;
+        }
+        else if (tempKey == 'B')
+        {
+            *LD_STATE = LED4;
+            return;
+        }
+        else
+        {
+            return;
+        }
+    }
+    else //LED4
+    {
+        if (tempKey == 'A')
+        {
+            *LD_STATE = LED3;
+            return;
+        }
+        else
+        {
+            return;
+        }
+    }    return;
+}
 
+void initDisplay(void)
+{
+    static uint16_t u16t_tempKeys;
+    static char ch_tempKey = ' ';
+    static bool b_updateDisplay = false;
+    static char chArr_tempPeriodOut[4] = {'0', '0', '0', '0'};
+    //Update Display to Show LED0 Stats
+
+    //Clear Display
+    esos_lcd44780_clearScreen();
+
+    //****** Row 0 ******
+    //No Up Arrow
+    esos_lcd44780_writeChar(0, 0, ' ');
+    //LED0
+    esos_lcd44780_writeString(0, 1, "LED0");
+    //Clear Current Period Array
+    for(int i = 0; i < 4; i++)
+    {
+        chArr_tempPeriodOut[i] = '0';
+    }
+    //Convert Period to String
+    sprintf(chArr_tempPeriodOut, "%lu", u32t_led0_period);
+    //Write Period
+    esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
+    esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
+    esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
+    esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
+    //ms
+    esos_lcd44780_writeString(0, 14, "ms");
+
+    //****** Row 1 ******
+    //Down Arrow
+    esos_lcd44780_writeChar(1, 0, 'v');
+    //Edit Message
+    esos_lcd44780_writeString(1, 1, "Press D to Edit");
+}
 //******************** E S O S  C H I L D  T A S K S **************************
 //Command Interpretter Task
 ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
@@ -481,13 +600,201 @@ ESOS_CHILD_TASK(decryptUINT, uint8_t u8t_dataIN)
 //LCD Task
 ESOS_USER_TASK(lcd_manager)
 {
+    static uint16_t u16t_tempKeys;
+    static char ch_tempKey = ' ';
+    static bool b_updateDisplay = false;
+    static char chArr_tempPeriodOut[4] = {'0', '0', '0', '0'};
     ESOS_TASK_BEGIN();
     while(1)
-    {
+    {   
+        //Get Keys
+        u16t_tempKeys = keypad_entry();
         //Check LCD State
         if(LCD_STATE == STANDBY)
         {
-            
+            //Check if key was move up or down
+            if(u16t_tempKeys & KEYPAD_KEYA_MASK)
+            {
+                selectLED(&LED_STATE, 'A');
+                //WAIT
+                ESOS_TASK_WAIT_UNTIL(keypad_entry() == 0);
+            }
+            else if (u16t_tempKeys & KEYPAD_KEYB_MASK)
+            {
+                selectLED(&LED_STATE, 'B');
+                //WAIT
+                ESOS_TASK_WAIT_UNTIL(keypad_entry() == 0);
+            }
+            //Check which LED is selected
+            if(LED_STATE == LED0)
+            {
+                //Update Display to Show LED0 Stats
+
+                //Clear Display
+                esos_lcd44780_clearScreen();
+
+                //****** Row 0 ******
+                //No Up Arrow
+                esos_lcd44780_writeChar(0, 0, ' ');
+                //LED0
+                esos_lcd44780_writeString(0, 1, "LED0");
+                //Clear Current Period Array
+                for(int i = 0; i < 4; i++)
+                {
+                    chArr_tempPeriodOut[i] = '0';
+                }
+                //Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_led0_period);
+                //Write Period
+                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
+                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
+                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
+                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
+                //ms
+                esos_lcd44780_writeString(0, 14, "ms");
+
+                //****** Row 1 ******
+                //Down Arrow
+                esos_lcd44780_writeChar(1, 0, 'v');
+                //Edit Message
+                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+
+                //Wait for Debounce
+                ESOS_TASK_WAIT_TICKS(100);
+                ESOS_TASK_WAIT_UNTIL(b_updateDisplay == false);
+            }
+            else if (LED_STATE == LED1)
+            {
+                //Update Display to Show LED1 Stats
+
+                //Clear Display
+                esos_lcd44780_clearScreen();
+
+                //****** Row 0 ******
+                //Up Arrow
+                esos_lcd44780_writeChar(0, 0, '^');
+                //LED1
+                esos_lcd44780_writeString(0, 1, "LED1");
+                //Clear Current Period Array
+                for(int i = 0; i < 4; i++)
+                {
+                    chArr_tempPeriodOut[i] = '0';
+                }
+                //Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_led1_period);
+                //Write Period
+                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
+                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
+                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
+                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
+                //ms
+                esos_lcd44780_writeString(0, 14, "ms");
+
+                //****** Row 1 ******
+                //Down Arrow
+                esos_lcd44780_writeChar(1, 0, 'v');
+                //Edit Message
+                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+            }
+            else if (LED_STATE == LED2)
+            {
+                //Update Display to Show LED2 Stats
+
+                //Clear Display
+                esos_lcd44780_clearScreen();
+
+                //****** Row 0 ******
+                //Up Arrow
+                esos_lcd44780_writeChar(0, 0, '^');
+                //LED2
+                esos_lcd44780_writeString(0, 1, "LED2");
+                //Clear Current Period Array
+                for(int i = 0; i < 4; i++)
+                {
+                    chArr_tempPeriodOut[i] = '0';
+                }
+                //Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_led2_period);
+                //Write Period
+                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
+                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
+                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
+                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
+                //ms
+                esos_lcd44780_writeString(0, 14, "ms");
+
+                //****** Row 1 ******
+                //Down Arrow
+                esos_lcd44780_writeChar(1, 0, 'v');
+                //Edit Message
+                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+            }
+            else if (LED_STATE == LED3)
+            {
+                //Update Display to Show LED3 Stats
+
+                //Clear Display
+                esos_lcd44780_clearScreen();
+
+                //****** Row 0 ******
+                //Up Arrow
+                esos_lcd44780_writeChar(0, 0, '^');
+                //LED3
+                esos_lcd44780_writeString(0, 1, "LED3");
+                //Clear Current Period Array
+                for(int i = 0; i < 4; i++)
+                {
+                    chArr_tempPeriodOut[i] = '0';
+                }
+                //Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_led3_period);
+                //Write Period
+                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
+                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
+                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
+                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
+                //ms
+                esos_lcd44780_writeString(0, 14, "ms");
+
+                //****** Row 1 ******
+                //Down Arrow
+                esos_lcd44780_writeChar(1, 0, 'v');
+                //Edit Message
+                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+            }
+            else if (LED_STATE == LED4)
+            {
+                //Update Display to Show LED4 Stats
+
+                //Clear Display
+                esos_lcd44780_clearScreen();
+
+                //****** Row 0 ******
+                //Up Arrow
+                esos_lcd44780_writeChar(0, 0, '^');
+                //LED4
+                esos_lcd44780_writeString(0, 1, "LED4");
+                //Clear Current Period Array
+                for(int i = 0; i < 4; i++)
+                {
+                    chArr_tempPeriodOut[i] = '0';
+                }
+                //Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_nucleoLED2_period);
+                //Write Period
+                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
+                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
+                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
+                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
+                //ms
+                esos_lcd44780_writeString(0, 14, "ms");
+
+                //****** Row 1 ******
+                //No Down Arrow
+                esos_lcd44780_writeChar(1, 0, ' ');
+                //Edit Message
+                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+            }
         }
         else if(LCD_STATE == EDIT)
         {
@@ -757,6 +1064,7 @@ ESOS_USER_TASK(modeSelect)
 
             ESOS_TASK_YIELD();
         }
+        //Various Checks for half speed
         if(b_led0_half && esos_hw_sui_isSwitchPressed(h_SW5) && !esos_hw_sui_isSwitchPressed(h_SW1))
         {
             esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period_half);
@@ -775,6 +1083,7 @@ ESOS_USER_TASK(modeSelect)
         }
         else
         {
+            //Return to normal speed
             esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period);
             esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period);
             esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period);
@@ -826,8 +1135,6 @@ ESOS_USER_TIMER(nucleoLED2)
     esos_hw_sui_toggleLED(h_LED4);
 }
 
-//This for some reason would not work, honestly no reason why it shouldn't since its right but its 4:48am and I'm tired
-
 //Command Mode Timer
 ESOS_USER_TIMER(commandMode)
 {
@@ -851,8 +1158,10 @@ void hw_init(void)
     //Setup LCD
     esos_lcd44780_configDisplay();
     __esos_lcd44780_init();
-    //Reset Screen
-    esos_lcd44780_clearScreen();
+    //Turn off cursor
+    esos_lcd44780_setCursorDisplay(false);
+    //Default
+    initDisplay();
 
     //ESOS HW setup
     //Define LEDs

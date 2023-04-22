@@ -49,7 +49,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL0_SET();
 
     //Small Delay to rid of voltage transients
-    delay();
+    delay(50);
 
     //Read Keys: 1, 4, 7, *
     u16t_keyVals |= (EDUB_KEY1_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEY1_OFFSET;
@@ -69,7 +69,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL1_SET();
 
     //Small Delay to rid of voltage transients
-    delay();
+    delay(50);
 
     //Read Keys: 2, 5, 8, 0
     u16t_keyVals |= (EDUB_KEY2_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEY2_OFFSET;
@@ -89,7 +89,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL2_SET();
 
     //Small Delay to rid of voltage transients
-    delay();
+    delay(50);
 
     //Read Keys: 3, 6, 9, #
     u16t_keyVals |= (EDUB_KEY3_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEY3_OFFSET;
@@ -109,7 +109,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL3_SET();
 
     //Small Delay to rid of voltage transients
-    delay();
+    delay(50);
 
     //Read Keys: A, B, C, D
     u16t_keyVals |= (EDUB_KEYA_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEYA_OFFSET;
@@ -128,11 +128,84 @@ uint16_t keypad_entry(void)
 }
 
 //Dr. Bruce's provided delay function
-void delay(void)
+void delay(uint16_t delay)
 {
     uint16_t i;
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < delay; i++)
     {
         __asm__("nop");
+    }
+}
+
+//Interpret the uint16_t value from the keypad and return direct value, meant to be used with the keypad_entry() function
+char keypad_interpret(uint16_t u16t_keyVals)
+{
+    if (u16t_keyVals == 0b0000000000000000)
+    {
+        return ' ';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY0_MASK) == KEYPAD_KEY0_MASK)
+    {
+        return '0';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY1_MASK) == KEYPAD_KEY1_MASK)
+    {
+        return '1';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY2_MASK) == KEYPAD_KEY2_MASK)
+    {
+        return '2';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY3_MASK) == KEYPAD_KEY3_MASK)
+    {
+        return '3';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY4_MASK) == KEYPAD_KEY4_MASK)
+    {
+        return '4';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY5_MASK) == KEYPAD_KEY5_MASK)
+    {
+        return '5';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY6_MASK) == KEYPAD_KEY6_MASK)
+    {
+        return '6';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY7_MASK) == KEYPAD_KEY7_MASK)
+    {
+        return '7';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY8_MASK) == KEYPAD_KEY8_MASK)
+    {
+        return '8';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEY9_MASK) == KEYPAD_KEY9_MASK)
+    {
+        return '9';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEYA_MASK) == KEYPAD_KEYA_MASK)
+    {
+        return 'A';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEYB_MASK) == KEYPAD_KEYB_MASK)
+    {
+        return 'B';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEYC_MASK) == KEYPAD_KEYC_MASK)
+    {
+        return 'C';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEYD_MASK) == KEYPAD_KEYD_MASK)
+    {
+        return 'D';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEYHASH_MASK) == KEYPAD_KEYHASH_MASK)
+    {
+        return '#';
+    }
+    else if ((u16t_keyVals & KEYPAD_KEYSTAR_MASK) == KEYPAD_KEYSTAR_MASK)
+    {
+        return '*';
     }
 }
