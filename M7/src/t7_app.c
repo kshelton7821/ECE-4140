@@ -1,20 +1,21 @@
 /*
-* Authors: Keaton Shelton, Josh White, and Emma Brown
-* Date: 4/5/2023
-*
-* Abstract: This is the main file for the M5 project. It contains the main program that
-*     that is an expanded version of M4 and M5. This time with EduBoard :)
-*
-*
-*
-*
-* Revisions:
-* 01ks, 01jw, 01eb 4/5/2023: Initial Revision
-* 02ks 4/12/2023: Change M6 intro, possibly fix stupid List Period bug
-* 03ks, 03eb, 03jw 4/12/2023: Add is ESOS SUI Stuff
-* 04ks 4/13/2023: Implement OPMODE system for state selection
-* 05ks 4/19/2023: Begin M7
-*/
+ * Authors: Keaton Shelton, Josh White, and Emma Brown
+ * Date: 4/5/2023
+ *
+ * Abstract: This is the main file for the M5 project. It contains the main program that
+ *     that is an expanded version of M4 and M5. This time with EduBoard :)
+ *
+ *
+ *
+ *
+ * Revisions:
+ * 01ks, 01jw, 01eb 4/5/2023: Initial Revision
+ * 02ks 4/12/2023: Change M6 intro, possibly fix stupid List Period bug
+ * 03ks, 03eb, 03jw 4/12/2023: Add is ESOS SUI Stuff
+ * 04ks 4/13/2023: Implement OPMODE system for state selection
+ * 05ks 4/19/2023: Begin M7
+ * 06ks 4/22/2023: M7 LCD Period Display Control Working, LCD Encrypt / Decrypt Working
+ */
 //******************** I N C L U D E S ***************************************
 #include "ptb.h"
 #include "vigenereH.h"
@@ -28,67 +29,78 @@
 //
 //
 //******************** G L O B A L S *****************************************
-//Circular Buffer Globals
+// Circular Buffer Globals
 #define CB_SIZE 256
 circular_buffer_t volatile cb_recieve, cb_send;
 uint8_t u8t_bufferRecieve[CB_SIZE], u8t_bufferSend[CB_SIZE];
 
-//Key Tracker
-uint16_t u16t_keyTracker = 0;
+// Repeat Arrays
+uint8_t u8tArr_cipherArr[16], u8tArr_decipherArr[16];
 
-//Message Strings
-char* pch_key = "BOLDFEARLESSCONFIDENT";
-char* pch_rmNonAlphaMessage = "\nRemove Non Alpha Mode Active\r\n";
-char* pch_toUpperMessage = "\nTo Upper Mode Active\r\n";
-char* pch_echoMessage = "\nEcho Mode Active\r\n";
-char* pch_encryptMessage = "\nEncypting Mode Active\r\n";
-char* pch_decryptMessage = "\nDecrypting Mode Active\r\n";
-char* pch_startMessage = "\nWelcome to Milestone 6, Vigenere Cipher and Other Functions\r\n";
-char* pch_commandMessage = "\nCommand Mode Intiated, Please Enter L to List Period\r\nOr Enter S to Set Period\r\n";
-char* pch_commandSetPeriod = "\nCommand Mode Set Period, Please Enter LED Number n\r\n";
-char* pch_commandExit = "\nExiting Command Mode\r\n";
-char* pch_commandSuccess = "\nExiting Command Mode\r\nTimer Set To: ";
-char* pch_commandMS = " ms\r\n";
-char* pch_errorMessage = "\nError, Invalid Command\r\n";
-char* pch_periodValue = "\nPeriod Value: ";
+// Key Tracker
+uint16_t volatile u16t_keyTracker = 0;
 
-//Timer Periods
+// Message Strings
+char *pch_key = "BOLDFEARLESSCONFIDENT";
+char *pch_rmNonAlphaMessage = "\nRemove Non Alpha Mode Active\r\n";
+char *pch_toUpperMessage = "\nTo Upper Mode Active\r\n";
+char *pch_echoMessage = "\nEcho Mode Active\r\n";
+char *pch_encryptMessage = "\nEncypting Mode Active\r\n";
+char *pch_decryptMessage = "\nDecrypting Mode Active\r\n";
+char *pch_startMessage = "\nWelcome to Milestone 7, Vigenere Cipher and Other Functions\r\n";
+char *pch_commandMessage = "\nCommand Mode Intiated, Please Enter L to List Period\r\nOr Enter S to Set Period\r\n\0";
+char *pch_commandSetPeriod = "\nCommand Mode Set Period, Please Enter LED Number n\r\n";
+char *pch_commandExit = "\nExiting Command Mode\r\n";
+char *pch_commandSuccess = "\nExiting Command Mode\r\nTimer Set To: ";
+char *pch_commandMS = " ms\r\n";
+char *pch_errorMessage = "\nError, Invalid Command\r\n";
+char *pch_periodValue = "\nPeriod Value: ";
+
+// Timer Periods
 uint32_t volatile u32t_led0_period = 1000;
 uint32_t volatile u32t_led1_period = 1000;
 uint32_t volatile u32t_led2_period = 1000;
 uint32_t volatile u32t_led3_period = 1000;
 uint32_t volatile u32t_nucleoLED2_period = 1000;
 
-//Timer Periods Half
+// Timer Periods Half
 uint32_t volatile u32t_led0_period_half = 500;
 uint32_t volatile u32t_led1_period_half = 500;
 uint32_t volatile u32t_led2_period_half = 500;
 uint32_t volatile u32t_led3_period_half = 500;
 uint32_t volatile u32t_nucleoLED2_period_half = 500;
 
-//Trackers
+// Periods for LCD
+uint32_t volatile u32t_lcd_led0_period = 1000;
+uint32_t volatile u32t_lcd_led1_period = 1000;
+uint32_t volatile u32t_lcd_led2_period = 1000;
+uint32_t volatile u32t_lcd_led3_period = 1000;
+uint32_t volatile u32t_lcd_nucleoLED2_period = 1000;
+
+// Trackers
 uint8_t volatile u8t_commandCounter = 0;
 uint8_t volatile u8t_arrTracker = 0;
 uint8_t volatile u8tArr_periodSet[4] = {0, 0, 0, 0};
 
-//Show Period Array
-char volatile u8tArr_showPeriod[4] = {'0', '0', '0', '0'};
+// Show Period Array UART
+char volatile u8tArr_showPeriod[5] = {'0', '0', '0', '0', '0'};
 
-
-//Encryption State / Other Mode Bools.
+// Encryption State / Other Mode Bools.
 bool volatile b_encrypt = false, b_decrypt = false, b_toUpper = false, b_rmNonAlpha = false, b_echo = false, b_commandMode = false, b_commandSetPeriod = false, b_commandListPeriod = false;
 
-//Booleans for Running LED's at half speed
+// Booleans for Running LED's at half speed
 bool volatile b_led0_half = false, b_led1_half = false, b_led2_half = false, b_led3_half = false;
 
-//Operating Mode
+// Booleans for editing period through LCD panel
+
+// Operating Mode
 st_opmode volatile opmode;
 uint8_t volatile u8t_mode = OPMODE_ECHO;
 
-//LCD Mode
+// LCD Mode
 enum LCD_MODE LCD_STATE = STANDBY;
 
-//LED Selected for LCD
+// LED Selected for LCD
 enum LED_SELECTED LED_STATE = LED0;
 //
 //
@@ -103,27 +115,26 @@ ESOS_SUI_SWITCH_HANDLE h_SW1, h_SW2, h_SW3, h_SW4, h_SW5;
 //
 //
 //******************** E S O S  D E F I N E S *********************************
-//LED Defines
+// LED Defines
 _st_esos_sui_LED NUCELO_LED2;
 _st_esos_sui_LED EDUB_LED3;
 _st_esos_sui_LED EDUB_LED2;
 _st_esos_sui_LED EDUB_LED1;
 _st_esos_sui_LED EDUB_LED0;
 
-//SWITCH Defines
+// SWITCH Defines
 _st_esos_sui_Switch NUCLEO_SW1;
 _st_esos_sui_Switch EDUB_SW2;
 _st_esos_sui_Switch EDUB_SW3;
 _st_esos_sui_Switch EDUB_SW4;
 _st_esos_sui_Switch EDUB_SW5;
 //******************** F U N C T I O N S **************************************
-//Function to choose correct selected LED
+// Function to choose correct selected LED
 
-void selectLED(enum LED_SELECTED *LD_STATE, char tempKey) 
+void selectLED(enum LED_SELECTED *LD_STATE, char tempKey)
 {
-    bool update = false;
-    //Check up or down
-    if(*LD_STATE == LED0)
+    // Check up or down
+    if (*LD_STATE == LED0)
     {
         if (tempKey == 'B')
         {
@@ -135,7 +146,7 @@ void selectLED(enum LED_SELECTED *LD_STATE, char tempKey)
             return;
         }
     }
-    else if(*LD_STATE == LED1)
+    else if (*LD_STATE == LED1)
     {
         if (tempKey == 'A')
         {
@@ -152,7 +163,7 @@ void selectLED(enum LED_SELECTED *LD_STATE, char tempKey)
             return;
         }
     }
-    else if(*LD_STATE == LED2)
+    else if (*LD_STATE == LED2)
     {
         if (tempKey == 'A')
         {
@@ -169,7 +180,7 @@ void selectLED(enum LED_SELECTED *LD_STATE, char tempKey)
             return;
         }
     }
-    else if(*LD_STATE == LED3)
+    else if (*LD_STATE == LED3)
     {
         if (tempKey == 'A')
         {
@@ -186,7 +197,7 @@ void selectLED(enum LED_SELECTED *LD_STATE, char tempKey)
             return;
         }
     }
-    else //LED4
+    else // LED4
     {
         if (tempKey == 'A')
         {
@@ -197,59 +208,71 @@ void selectLED(enum LED_SELECTED *LD_STATE, char tempKey)
         {
             return;
         }
-    }    return;
+    }
+    return;
 }
 
 void initDisplay(void)
 {
-    static uint16_t u16t_tempKeys;
-    static char ch_tempKey = ' ';
-    static bool b_updateDisplay = false;
-    static char chArr_tempPeriodOut[4] = {'0', '0', '0', '0'};
-    //Update Display to Show LED0 Stats
+    char chArr_tempPeriodOut1[4] = {'0', '0', '0', '0'};
+    // Update Display to Show LED0 Stats
 
-    //Clear Display
+    // Clear Display
     esos_lcd44780_clearScreen();
 
     //****** Row 0 ******
-    //No Up Arrow
+    // No Up Arrow
     esos_lcd44780_writeChar(0, 0, ' ');
-    //LED0
+    // LED0
     esos_lcd44780_writeString(0, 1, "LED0");
-    //Clear Current Period Array
-    for(int i = 0; i < 4; i++)
+    // Clear Current Period Array
+    for (int i = 0; i < 4; i++)
     {
-        chArr_tempPeriodOut[i] = '0';
+        chArr_tempPeriodOut1[i] = '0';
     }
-    //Convert Period to String
-    sprintf(chArr_tempPeriodOut, "%lu", u32t_led0_period);
-    //Write Period
-    esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
-    esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
-    esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
-    esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
-    //ms
+    // Convert Period to String
+    sprintf(chArr_tempPeriodOut1, "%lu", u32t_led0_period);
+    // Write Period
+    esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut1[0]);
+    esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut1[1]);
+    esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut1[2]);
+    esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut1[3]);
+    // ms
     esos_lcd44780_writeString(0, 14, "ms");
 
     //****** Row 1 ******
-    //Down Arrow
+    // Down Arrow
     esos_lcd44780_writeChar(1, 0, 'v');
-    //Edit Message
+    // Edit Message
     esos_lcd44780_writeString(1, 1, "Press D to Edit");
 }
+
+void leftShifter(uint8_t *u8t_array, uint8_t u8t_in, size_t size)
+{
+    // Shift Array Left
+    for (int i = 0; i < size - 1; i++)
+    {
+        *(u8t_array + i) = *(u8t_array + (i + 1));
+    }
+    // New Element
+    *(u8t_array + (size - 1)) = u8t_in;
+}
 //******************** E S O S  C H I L D  T A S K S **************************
-//Command Interpretter Task
+// Command Interpretter Task
 ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
 {
-    static uint8_t u8tArr_periodSet[4] = {0, 0, 0, 0};
-    static char u8tArr_showPeriod[4] = {'0', '0', '0', '0'};
+    // UPDATE BLOCK
+    //  Removed all calls to
+    //  ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+    //  This utterly breaks everything with the LCD_Manager enabled. Why? I have no idea.
+    //  I'm tired of trying to figure it out so if someone wants to fix it, go ahead. But it won't be me.
     static uint8_t u8t_led;
     ESOS_TASK_BEGIN();
-    //Check for Command
-    //List LEDx Period
-    if(u8t_dataIN == 'L' && u8t_commandCounter == 0)
+    // Check for Command
+    // List LEDx Period
+    if (u8t_dataIN == 'L' && u8t_commandCounter == 0)
     {
-        //Echo Back
+        // Echo Back
         ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
         ESOS_TASK_WAIT_ON_SEND_STRING("L\r\n");
         ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
@@ -258,266 +281,265 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
         ESOS_TASK_WAIT_ON_SEND_STRING("ENTER 0, 1, 2, 3, 4 to select LED\r\n");
         ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-        //Increment Command Counter
+        // Increment Command Counter
         u8t_commandCounter++;
         b_commandListPeriod = true;
         b_commandSetPeriod = false;
     }
-    //Check for LED Number
-    else if(u8t_commandCounter == 1 && b_commandListPeriod && isdigit(u8t_dataIN))
+    // Check for LED Number
+    else if (u8t_commandCounter == 1 && b_commandListPeriod && isdigit(u8t_dataIN))
     {
-        if(u8t_dataIN == '0')
+        if (u8t_dataIN == '0')
         {
-        
-        uint32_t test = u32t_led0_period;
-        sprintf(u8tArr_showPeriod, "%lu", test);
-        //Send LED0 Period
-        ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
-        ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-        ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
-        ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
-        ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+
+            uint32_t test = u32t_led0_period;
+            sprintf(u8tArr_showPeriod, "%lu", test);
+            // Send LED0 Period
+            ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+            ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
+            // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+            ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
-        else if(u8t_dataIN == '1')
+        else if (u8t_dataIN == '1')
         {
             sprintf(u8tArr_showPeriod, "%lu", u32t_led1_period);
-            //Send LED1 Period
+            // Send LED1 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
-            ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
+            // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
-        else if(u8t_dataIN == '2')
+        else if (u8t_dataIN == '2')
         {
             sprintf(u8tArr_showPeriod, "%lu", u32t_led2_period);
-            //Send LED2 Period
+            // Send LED2 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
-            ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
+            // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
-        else if(u8t_dataIN == '3')
+        else if (u8t_dataIN == '3')
         {
             sprintf(u8tArr_showPeriod, "%lu", u32t_led3_period);
-            //Send LED3 Period
+            // Send LED3 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
-            ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
+            // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
-        else if(u8t_dataIN == '4')
+        else if (u8t_dataIN == '4')
         {
             sprintf(u8tArr_showPeriod, "%lu", u32t_nucleoLED2_period);
-            //Send Nucleo LED2 Period
+            // Send Nucleo LED2 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
-            ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
+            // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
-        //Reset
+        // Reset
         b_commandListPeriod = false;
         u8t_commandCounter = 0;
     }
-    else if(u8t_dataIN == 'S' && u8t_commandCounter == 0)
+    else if (u8t_dataIN == 'S' && u8t_commandCounter == 0)
     {
-        //Command S Message
+        // Command S Message
         ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
         ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandSetPeriod);
         ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-        //Increment Command Counter
+        // Increment Command Counter
         u8t_commandCounter++;
         b_commandSetPeriod = true;
         b_commandListPeriod = false;
     }
-    else if(u8t_commandCounter == 1 && b_commandSetPeriod && isdigit(u8t_dataIN))
+    else if (u8t_commandCounter == 1 && b_commandSetPeriod && isdigit(u8t_dataIN))
     {
-        //Check for LED Number
-        if(u8t_dataIN == '0')
+        // Check for LED Number
+        if (u8t_dataIN == '0')
         {
-            //Echo Back Selection
+            // Echo Back Selection
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING("LED0 has been selected\r\nEnter new period in nnnn format\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-            
-            //Select LED0
+
+            // Select LED0
             u8t_led = 0;
             u8t_commandCounter++;
         }
-        else if(u8t_dataIN == '1')
+        else if (u8t_dataIN == '1')
         {
-            //Echo Back Selection
+            // Echo Back Selection
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING("LED1 has been selected\r\nEnter new period in nnnn format\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-            //Select LED1
+            // Select LED1
             u8t_led = 1;
             u8t_commandCounter++;
         }
-        else if(u8t_dataIN == '2')
+        else if (u8t_dataIN == '2')
         {
-            //Echo Back Selection
+            // Echo Back Selection
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING("LED2 has been selected\r\nEnter new period in nnnn format\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-            //Select LED2
+            // Select LED2
             u8t_led = 2;
             u8t_commandCounter++;
         }
-        else if(u8t_dataIN == '3')
+        else if (u8t_dataIN == '3')
         {
-            //Echo Back Selection
+            // Echo Back Selection
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING("LED3 has been selected\r\nEnter new period in nnnn format\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-            //Select LED3
+            // Select LED3
             u8t_led = 3;
             u8t_commandCounter++;
         }
-        else if(u8t_dataIN == '4')
+        else if (u8t_dataIN == '4')
         {
-            //Echo Back Selection
+            // Echo Back Selection
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING("Nucleo LED2 has been selected\r\nEnter new period in nnnn format\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-            //Select Nucleo LED2
+            // Select Nucleo LED2
             u8t_led = 4;
             u8t_commandCounter++;
         }
     }
-    else if(u8t_commandCounter == 2 && b_commandSetPeriod && isdigit(u8t_dataIN))
+    else if (u8t_commandCounter == 2 && b_commandSetPeriod && isdigit(u8t_dataIN))
     {
-        //Take in period
+        // Take in period
         u8tArr_periodSet[u8t_arrTracker] = u8t_dataIN;
-        //Increment Array Tracker
+        // Increment Array Tracker
         u8t_arrTracker++;
-        //Check if period is complete
-        if(u8t_arrTracker > 3)
+        // Check if period is complete
+        if (u8t_arrTracker > 3)
         {
-            //Set Period for respective LED
-            if(u8t_led == 0)
+            // Set Period for respective LED
+            if (u8t_led == 0)
             {
                 u32t_led0_period = atoi(u8tArr_periodSet);
                 u32t_led0_period_half = u32t_led0_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period);
-                
 
-                //Send LED0 Period
+                // Send LED0 Period
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandSuccess);
-                ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_periodSet[0], 4);
-                ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+                ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_periodSet);
+                // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-                //Fix stupid bug that took me 4 hours to find with the List mode
-                for(int i = 0; i < 4; i++)
+                // Fix stupid bug that took me 4 hours to find with the List mode
+                for (int i = 0; i < 4; i++)
                 {
                     u8tArr_periodSet[i] = '0';
                 }
             }
-            else if(u8t_led == 1)
+            else if (u8t_led == 1)
             {
                 u32t_led1_period = atoi(u8tArr_periodSet);
                 u32t_led1_period_half = u32t_led1_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period);
 
-                //Send LED1 Period
+                // Send LED1 Period
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandSuccess);
-                ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_periodSet[0], 4);
-                ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+                ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_periodSet);
+                // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-                //Fix stupid bug that took me 4 hours to find with the List mode
-                for(int i = 0; i < 4; i++)
+                // Fix stupid bug that took me 4 hours to find with the List mode
+                for (int i = 0; i < 4; i++)
                 {
                     u8tArr_periodSet[i] = '0';
                 }
             }
-            else if(u8t_led == 2)
+            else if (u8t_led == 2)
             {
                 u32t_led2_period = atoi(u8tArr_periodSet);
                 u32t_led2_period_half = u32t_led2_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period);
 
-                //Send LED2 Period
+                // Send LED2 Period
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandSuccess);
-                ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_periodSet[0], 4);
-                ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+                ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_periodSet);
+                // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-                //Fix stupid bug that took me 4 hours to find with the List mode
-                for(int i = 0; i < 4; i++)
+                // Fix stupid bug that took me 4 hours to find with the List mode
+                for (int i = 0; i < 4; i++)
                 {
                     u8tArr_periodSet[i] = '0';
                 }
             }
-            else if(u8t_led == 3)
+            else if (u8t_led == 3)
             {
                 u32t_led3_period = atoi(u8tArr_periodSet);
                 u32t_led3_period_half = u32t_led3_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period);
 
-                //Send LED3 Period
+                // Send LED3 Period
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandSuccess);
-                ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_periodSet[0], 4);
-                ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+                ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_periodSet);
+                // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-                //Fix stupid bug that took me 4 hours to find with the List mode
-                for(int i = 0; i < 4; i++)
+                // Fix stupid bug that took me 4 hours to find with the List mode
+                for (int i = 0; i < 4; i++)
                 {
                     u8tArr_periodSet[i] = '0';
                 }
             }
-            else if(u8t_led == 4)
+            else if (u8t_led == 4)
             {
                 u32t_nucleoLED2_period = atoi(u8tArr_periodSet);
                 u32t_nucleoLED2_period_half = u32t_nucleoLED2_period / 2;
                 esos_ChangeTimerPeriod(tmr_handle_nucleoLED2, u32t_nucleoLED2_period);
 
-                //Send Nucleo LED2 Period
+                // Send Nucleo LED2 Period
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandSuccess);
-                ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_periodSet[0], 4);
-                ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
+                ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_periodSet);
+                // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
 
-                //Fix stupid bug that took me 4 hours to find with the List mode
-                for(int i = 0; i < 4; i++)
+                // Fix stupid bug that took me 4 hours to find with the List mode
+                for (int i = 0; i < 4; i++)
                 {
                     u8tArr_periodSet[i] = '0';
                 }
             }
-            //Reset Array Tracker
+            // Reset Array Tracker
             u8t_arrTracker = 0;
-            //Reset Command Counter
+            // Reset Command Counter
             u8t_commandCounter = 0;
-            //Reset Command Flag
+            // Reset Command Flag
             b_commandSetPeriod = false;
-            //Reset Period Flag
+            // Reset Period Flag
             b_commandListPeriod = false;
         }
     }
     else
     {
-        //Input Error
-        //Reset Variables
+        // Input Error
+        // Reset Variables
         u8t_commandCounter = 0;
         u8t_arrTracker = 0;
         b_commandSetPeriod = false;
         b_commandListPeriod = false;
-        //Send Error Message
+        // Send Error Message
         ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
         ESOS_TASK_WAIT_ON_SEND_STRING(pch_errorMessage);
         ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
@@ -525,25 +547,25 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
     ESOS_TASK_END();
 }
 
-//Remove Non-Alpha Task
+// Remove Non-Alpha Task
 ESOS_CHILD_TASK(removeNonAlpha, uint8_t u8t_dataIN)
 {
     ESOS_TASK_BEGIN();
-    //If so, check if it is alpha
-    if(isalpha(u8t_dataIN) || isdigit(u8t_dataIN))
+    // If so, check if it is alpha
+    if (isalpha(u8t_dataIN) || isdigit(u8t_dataIN))
     {
-        //Push to outbound buffer
+        // Push to outbound buffer
         pushBuffer(&cb_send, u8t_dataIN);
     }
     ESOS_TASK_END();
 }
 
-//To Upper
+// To Upper
 ESOS_CHILD_TASK(toUpperFunc, uint8_t u8t_dataIN)
 {
     ESOS_TASK_BEGIN();
-    //If so, check if it is lower case
-    if(islower(u8t_dataIN))
+    // If so, check if it is lower case
+    if (islower(u8t_dataIN))
     {
         u8t_dataIN = toupper(u8t_dataIN);
         pushBuffer(&cb_send, u8t_dataIN);
@@ -551,43 +573,48 @@ ESOS_CHILD_TASK(toUpperFunc, uint8_t u8t_dataIN)
     ESOS_TASK_END();
 }
 
-//Encrypt Task
+// Encrypt Task
 ESOS_CHILD_TASK(encryptUINT, uint8_t u8t_dataIN)
 {
     ESOS_TASK_BEGIN();
-    if(isalpha(u8t_dataIN))
+    if (isalpha(u8t_dataIN))
     {
-        //If so, check if it is lower case
+        // If so, check if it is lower case
         if (islower(u8t_dataIN))
         {
             u8t_dataIN = toupper(u8t_dataIN);
         }
-
-        //Encrypt
+        // Add to Decrypted Buffer
+        leftShifter(&u8tArr_decipherArr, u8t_dataIN, (sizeof(u8tArr_decipherArr) / sizeof(u8tArr_decipherArr[0])));
+        // Encrypt
         encryptBoard(&u8t_dataIN, pch_key, &u16t_keyTracker);
-
-        //Push to outbound buffer
+        // Add to Cyper Buffer
+        leftShifter(&u8tArr_cipherArr, u8t_dataIN, (sizeof(u8tArr_decipherArr) / sizeof(u8tArr_decipherArr[0])));
+        // Push to outbound buffer
         pushBuffer(&cb_send, u8t_dataIN);
     }
     ESOS_TASK_END();
 }
-//Decrypt Task
+// Decrypt Task
 ESOS_CHILD_TASK(decryptUINT, uint8_t u8t_dataIN)
 {
     ESOS_TASK_BEGIN();
-    //If so, check if it is alpha
+    // If so, check if it is alpha
     if (isalpha(u8t_dataIN))
     {
-        //If so, check if it is lower case
+        // If so, check if it is lower case
         if (islower(u8t_dataIN))
         {
             u8t_dataIN = toupper(u8t_dataIN);
         }
-
-        //Decrypt
+        // Add to Cipher Buffer
+        leftShifter(&u8tArr_cipherArr, u8t_dataIN, (sizeof(u8tArr_decipherArr) / sizeof(u8tArr_decipherArr[0])));
+        // Decrypt
         decryptBoard(&u8t_dataIN, pch_key, &u16t_keyTracker);
+        // Add to Decrypted Buffer
+        leftShifter(&u8tArr_decipherArr, u8t_dataIN, (sizeof(u8tArr_decipherArr) / sizeof(u8tArr_decipherArr[0])));
 
-        //Push to outbound buffer
+        // Push to outbound buffer
         pushBuffer(&cb_send, u8t_dataIN);
     }
     ESOS_TASK_END();
@@ -597,229 +624,226 @@ ESOS_CHILD_TASK(decryptUINT, uint8_t u8t_dataIN)
 //
 //
 //******************** E S O S  T A S K S *************************************
-//LCD Task
+// LCD Task
 ESOS_USER_TASK(lcd_manager)
 {
     static uint16_t u16t_tempKeys;
     static char ch_tempKey = ' ';
-    static bool b_updateDisplay = false;
-    static char chArr_tempPeriodOut[4] = {'0', '0', '0', '0'};
+    // Show Period Array LCD
+    static uint8_t chArr_tempPeriodOut[4] = {'0', '0', '0', '0'};
     ESOS_TASK_BEGIN();
-    while(1)
-    {   
-        //Get Keys
-        u16t_tempKeys = keypad_entry();
-        //Check LCD State
-        if(LCD_STATE == STANDBY)
+    while (1)
+    {
+        if (u8t_mode == OPMODE_KEYBOARD)
         {
-            //Check if key was move up or down
-            if(u16t_tempKeys & KEYPAD_KEYA_MASK)
+            ESOS_TASK_YIELD();
+        }
+        // Get Keys
+        u16t_tempKeys = keypad_entry();
+        // Check LCD State
+        if (LCD_STATE == STANDBY)
+        {
+            // Check if key was move up or down
+            if (u16t_tempKeys & KEYPAD_KEYA_MASK)
             {
                 selectLED(&LED_STATE, 'A');
-                //WAIT
+                // WAIT FOR DEBOUNCE
                 ESOS_TASK_WAIT_UNTIL(keypad_entry() == 0);
             }
             else if (u16t_tempKeys & KEYPAD_KEYB_MASK)
             {
                 selectLED(&LED_STATE, 'B');
-                //WAIT
+                // WAIT FOR DEBOUNCE
                 ESOS_TASK_WAIT_UNTIL(keypad_entry() == 0);
             }
-            //Check which LED is selected
-            if(LED_STATE == LED0)
+            // Check which LED is selected
+            if (LED_STATE == LED0)
             {
-                //Update Display to Show LED0 Stats
+                // Update Display to Show LED0 Stats
 
-                //Clear Display
+                // Clear Display
                 esos_lcd44780_clearScreen();
 
                 //****** Row 0 ******
-                //No Up Arrow
+                // No Up Arrow
                 esos_lcd44780_writeChar(0, 0, ' ');
-                //LED0
+                // LED0
                 esos_lcd44780_writeString(0, 1, "LED0");
-                //Clear Current Period Array
-                for(int i = 0; i < 4; i++)
-                {
-                    chArr_tempPeriodOut[i] = '0';
-                }
-                //Convert Period to String
-                sprintf(chArr_tempPeriodOut, "%lu", u32t_led0_period);
-                //Write Period
-                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
-                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
-                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
-                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
-                //ms
+                // Clear Current Period Array
+
+                // Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_lcd_led0_period);
+                // Write Period
+                esos_lcd44780_writeString(0, 9, chArr_tempPeriodOut);
+                // ms
                 esos_lcd44780_writeString(0, 14, "ms");
 
                 //****** Row 1 ******
-                //Down Arrow
+                // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
-                //Edit Message
+                // Edit Message
                 esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                for (int i = 0; i < 4; i++)
+                {
+                    chArr_tempPeriodOut[i] = '0';
+                }
 
-                //Wait for Debounce
+                // Wait for Debounce
                 ESOS_TASK_WAIT_TICKS(100);
-                ESOS_TASK_WAIT_UNTIL(b_updateDisplay == false);
+                ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
+                ESOS_TASK_YIELD();
             }
             else if (LED_STATE == LED1)
             {
-                //Update Display to Show LED1 Stats
+                // Update Display to Show LED1 Stats
 
-                //Clear Display
+                // Clear Display
                 esos_lcd44780_clearScreen();
 
                 //****** Row 0 ******
-                //Up Arrow
+                // Up Arrow
                 esos_lcd44780_writeChar(0, 0, '^');
-                //LED1
+                // LED1
                 esos_lcd44780_writeString(0, 1, "LED1");
-                //Clear Current Period Array
-                for(int i = 0; i < 4; i++)
+                // Clear Current Period Array
+                for (int i = 0; i < 4; i++)
                 {
                     chArr_tempPeriodOut[i] = '0';
                 }
-                //Convert Period to String
-                sprintf(chArr_tempPeriodOut, "%lu", u32t_led1_period);
-                //Write Period
-                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
-                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
-                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
-                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
-                //ms
+                // Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_lcd_led1_period);
+                // Write Period
+                esos_lcd44780_writeString(0, 9, chArr_tempPeriodOut);
+                // ms
                 esos_lcd44780_writeString(0, 14, "ms");
 
                 //****** Row 1 ******
-                //Down Arrow
+                // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
-                //Edit Message
+                // Edit Message
                 esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                ESOS_TASK_YIELD();
             }
             else if (LED_STATE == LED2)
             {
-                //Update Display to Show LED2 Stats
+                // Update Display to Show LED2 Stats
 
-                //Clear Display
+                // Clear Display
                 esos_lcd44780_clearScreen();
 
                 //****** Row 0 ******
-                //Up Arrow
+                // Up Arrow
                 esos_lcd44780_writeChar(0, 0, '^');
-                //LED2
+                // LED2
                 esos_lcd44780_writeString(0, 1, "LED2");
-                //Clear Current Period Array
-                for(int i = 0; i < 4; i++)
+                // Clear Current Period Array
+                for (int i = 0; i < 4; i++)
                 {
                     chArr_tempPeriodOut[i] = '0';
                 }
-                //Convert Period to String
-                sprintf(chArr_tempPeriodOut, "%lu", u32t_led2_period);
-                //Write Period
-                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
-                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
-                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
-                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
-                //ms
+                // Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_lcd_led2_period);
+                // Write Period
+                esos_lcd44780_writeString(0, 9, chArr_tempPeriodOut);
+                // ms
                 esos_lcd44780_writeString(0, 14, "ms");
 
                 //****** Row 1 ******
-                //Down Arrow
+                // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
-                //Edit Message
+                // Edit Message
                 esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                ESOS_TASK_YIELD();
             }
             else if (LED_STATE == LED3)
             {
-                //Update Display to Show LED3 Stats
+                // Update Display to Show LED3 Stats
 
-                //Clear Display
+                // Clear Display
                 esos_lcd44780_clearScreen();
 
                 //****** Row 0 ******
-                //Up Arrow
+                // Up Arrow
                 esos_lcd44780_writeChar(0, 0, '^');
-                //LED3
+                // LED3
                 esos_lcd44780_writeString(0, 1, "LED3");
-                //Clear Current Period Array
-                for(int i = 0; i < 4; i++)
+                // Clear Current Period Array
+                for (int i = 0; i < 4; i++)
                 {
                     chArr_tempPeriodOut[i] = '0';
                 }
-                //Convert Period to String
-                sprintf(chArr_tempPeriodOut, "%lu", u32t_led3_period);
-                //Write Period
-                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
-                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
-                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
-                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
-                //ms
+                // Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_lcd_led3_period);
+                // Write Period
+                esos_lcd44780_writeString(0, 9, chArr_tempPeriodOut);
+                // ms
                 esos_lcd44780_writeString(0, 14, "ms");
 
                 //****** Row 1 ******
-                //Down Arrow
+                // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
-                //Edit Message
+                // Edit Message
                 esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                ESOS_TASK_YIELD();
             }
             else if (LED_STATE == LED4)
             {
-                //Update Display to Show LED4 Stats
+                // Update Display to Show LED4 Stats
 
-                //Clear Display
+                // Clear Display
                 esos_lcd44780_clearScreen();
 
                 //****** Row 0 ******
-                //Up Arrow
+                // Up Arrow
                 esos_lcd44780_writeChar(0, 0, '^');
-                //LED4
+                // LED4
                 esos_lcd44780_writeString(0, 1, "LED4");
-                //Clear Current Period Array
-                for(int i = 0; i < 4; i++)
+                // Clear Current Period Array
+                for (int i = 0; i < 4; i++)
                 {
                     chArr_tempPeriodOut[i] = '0';
                 }
-                //Convert Period to String
-                sprintf(chArr_tempPeriodOut, "%lu", u32t_nucleoLED2_period);
-                //Write Period
-                esos_lcd44780_writeChar(0, 9, chArr_tempPeriodOut[0]);
-                esos_lcd44780_writeChar(0, 10, chArr_tempPeriodOut[1]);
-                esos_lcd44780_writeChar(0, 11, chArr_tempPeriodOut[2]);
-                esos_lcd44780_writeChar(0, 12, chArr_tempPeriodOut[3]);
-                //ms
+                // Convert Period to String
+                sprintf(chArr_tempPeriodOut, "%lu", u32t_lcd_nucleoLED2_period);
+                // Write Period
+                esos_lcd44780_writeString(0, 9, chArr_tempPeriodOut);
+                // ms
                 esos_lcd44780_writeString(0, 14, "ms");
 
                 //****** Row 1 ******
-                //No Down Arrow
+                // No Down Arrow
                 esos_lcd44780_writeChar(1, 0, ' ');
-                //Edit Message
+                // Edit Message
                 esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                ESOS_TASK_YIELD();
             }
         }
-        else if(LCD_STATE == EDIT)
+        else if (LCD_STATE == EDIT)
         {
-
         }
-        else //LCD_STATE == REPEAT
+        else // LCD_STATE == REPEAT
         {
-
+            //Row 0
+            esos_lcd44780_writeString(0, 0, u8tArr_decipherArr);
+            //Row 1
+            esos_lcd44780_writeString(1, 0, u8tArr_cipherArr);
         }
         ESOS_TASK_YIELD();
     }
     ESOS_TASK_END();
 }
 
-//USART Sending Task
+// USART Sending Task
 ESOS_USER_TASK(sending)
 {
     static uint8_t u8t_dataOut;
     ESOS_TASK_BEGIN();
-    while(1)
+    while (1)
     {
-        //Check if anything is in outbound buffer
-        while(popBuffer(&cb_send, &u8t_dataOut) == 0)
+        // Check if anything is in outbound buffer
+        while (popBuffer(&cb_send, &u8t_dataOut) == 0)
         {
-            //If so, send it out
+            // If so, send it out
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_UINT8(u8t_dataOut);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
@@ -829,18 +853,18 @@ ESOS_USER_TASK(sending)
     ESOS_TASK_END();
 }
 
-//USART Recieving Task
+// USART Recieving Task
 ESOS_USER_TASK(recieving)
 {
     static uint8_t u8t_dataIn;
     ESOS_TASK_BEGIN();
-    //Send Welcome Message
+    // Send Welcome Message
     ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
     ESOS_TASK_WAIT_ON_SEND_STRING(pch_startMessage);
     ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-    while(1)
+    while (1)
     {
-        //Check if anything is in inbound buffer
+        // Check if anything is in inbound buffer
         ESOS_TASK_WAIT_ON_AVAILABLE_IN_COMM();
         ESOS_TASK_WAIT_ON_GET_UINT8(u8t_dataIn);
         ESOS_TASK_SIGNAL_AVAILABLE_IN_COMM();
@@ -850,23 +874,25 @@ ESOS_USER_TASK(recieving)
     ESOS_TASK_END();
 }
 
-//Mode Select Task
+// Mode Select Task
 ESOS_USER_TASK(modeSelect)
 {
     static uint8_t u8t_dataIn;
-    static uint8_t u8t_buttons[5] = {0,0,0,0,0};
+    static uint8_t u8t_buttons[5] = {0, 0, 0, 0, 0};
 
     ESOS_TASK_HANDLE tskHandle_imTired;
     ESOS_TASK_BEGIN();
-    while(1)
+    while (1)
     {
-        //Check the OPMODE
+        // Check the OPMODE
 
-        //If in command mode
-        if(u8t_mode == OPMODE_KEYBOARD)
+        // If in command mode
+        if (u8t_mode == OPMODE_KEYBOARD)
         {
-            //Check for other switches
-            if(esos_hw_sui_isSwitchPressed(h_SW2))
+            // Change LCD Mode
+            LCD_STATE = STANDBY;
+            // Check for other switches
+            if (esos_hw_sui_isSwitchPressed(h_SW2))
             {
                 b_led3_half = true;
             }
@@ -884,23 +910,30 @@ ESOS_USER_TASK(modeSelect)
             }
             else
             {
-                //Reset
+                // Reset
                 b_led0_half = false;
                 b_led1_half = false;
                 b_led2_half = false;
                 b_led3_half = false;
             }
 
-            //Check if previously in command mode
-            if(!b_commandMode)
+            // Check if previously in command mode
+            if (!b_commandMode)
             {
-                //Send Message
+                // Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMessage);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                 u16t_keyTracker = 0;
+
+                // Reset Repeat Arrays to spaces
+                for (int i = 0; i < 16; i++)
+                {
+                    u8tArr_cipherArr[i] = ' ';
+                    u8tArr_decipherArr[i] = ' ';
+                }
             }
-            //Set various bools
+            // Set various bools
             b_commandMode = true;
             b_encrypt = false;
             b_decrypt = false;
@@ -908,26 +941,35 @@ ESOS_USER_TASK(modeSelect)
             b_rmNonAlpha = false;
             b_echo = false;
 
-            if(popBuffer(&cb_recieve, &u8t_dataIn) == 0)
+            if (popBuffer(&cb_recieve, &u8t_dataIn) == 0)
             {
-                //Spawn command mode task
+                // Spawn command mode task
                 ESOS_ALLOCATE_CHILD_TASK(tskHandle_imTired);
                 ESOS_TASK_SPAWN_AND_WAIT(tskHandle_imTired, interpretter, u8t_dataIn);
                 ESOS_TASK_YIELD();
             }
         }
-        else if(u8t_mode == OPMODE_RM_NON_ALPHA)
+        else if (u8t_mode == OPMODE_RM_NON_ALPHA)
         {
-            //Check if previously in rmNonAlpha mode
-            if(!b_rmNonAlpha)
+            // Change LCD Mode
+            LCD_STATE = STANDBY;
+            // Check if previously in rmNonAlpha mode
+            if (!b_rmNonAlpha)
             {
-                //Send Message
+                // Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_rmNonAlphaMessage);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                 u16t_keyTracker = 0;
+
+                // Reset Repeat Arrays to spaces
+                for (int i = 0; i < 16; i++)
+                {
+                    u8tArr_cipherArr[i] = ' ';
+                    u8tArr_decipherArr[i] = ' ';
+                }
             }
-            //Set various bools
+            // Set various bools
             b_rmNonAlpha = true;
             b_encrypt = false;
             b_decrypt = false;
@@ -937,26 +979,35 @@ ESOS_USER_TASK(modeSelect)
             b_commandListPeriod = false;
             b_commandSetPeriod = false;
 
-            if(popBuffer(&cb_recieve, &u8t_dataIn) == 0)
+            if (popBuffer(&cb_recieve, &u8t_dataIn) == 0)
             {
-                //Spawn rmNonAlpha task
+                // Spawn rmNonAlpha task
                 ESOS_ALLOCATE_CHILD_TASK(tskHandle_imTired);
                 ESOS_TASK_SPAWN_AND_WAIT(tskHandle_imTired, removeNonAlpha, u8t_dataIn);
                 ESOS_TASK_YIELD();
             }
         }
-        else if(u8t_mode == OPMODE_TO_UPPER)
+        else if (u8t_mode == OPMODE_TO_UPPER)
         {
-            //Check if previously in toUpper mode
-            if(!b_toUpper)
+            // Change LCD Mode
+            LCD_STATE = STANDBY;
+            // Check if previously in toUpper mode
+            if (!b_toUpper)
             {
-                //Send Message
+                // Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_toUpperMessage);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                 u16t_keyTracker = 0;
+
+                // Reset Repeat Arrays to spaces
+                for (int i = 0; i < 16; i++)
+                {
+                    u8tArr_cipherArr[i] = ' ';
+                    u8tArr_decipherArr[i] = ' ';
+                }
             }
-            //Set various bools
+            // Set various bools
             b_toUpper = true;
             b_encrypt = false;
             b_decrypt = false;
@@ -966,27 +1017,29 @@ ESOS_USER_TASK(modeSelect)
             b_commandListPeriod = false;
             b_commandSetPeriod = false;
 
-            if(popBuffer(&cb_recieve, &u8t_dataIn) == 0)
+            if (popBuffer(&cb_recieve, &u8t_dataIn) == 0)
             {
-                //Spawn toUpper task
+                // Spawn toUpper task
                 ESOS_ALLOCATE_CHILD_TASK(tskHandle_imTired);
                 ESOS_TASK_SPAWN_AND_WAIT(tskHandle_imTired, toUpperFunc, u8t_dataIn);
                 ESOS_TASK_YIELD();
             }
         }
-        else if(u8t_mode == OPMODE_ENCRYPT)
+        else if (u8t_mode == OPMODE_ENCRYPT)
         {
-            //Check if previously in encrypt mode
-            if(!b_encrypt)
+            // Change LCD Mode
+            LCD_STATE = REPEAT;
+            // Check if previously in encrypt mode
+            if (!b_encrypt)
             {
-                //Send Message
+                // Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_encryptMessage);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-                //Reset key tracker
+                // Reset key tracker
                 u16t_keyTracker = 0;
             }
-            //Set various bools
+            // Set various bools
             b_encrypt = true;
             b_decrypt = false;
             b_toUpper = false;
@@ -996,27 +1049,29 @@ ESOS_USER_TASK(modeSelect)
             b_commandListPeriod = false;
             b_commandSetPeriod = false;
 
-            if(popBuffer(&cb_recieve, &u8t_dataIn) == 0)
+            if (popBuffer(&cb_recieve, &u8t_dataIn) == 0)
             {
-                //Spawn encrypt task
+                // Spawn encrypt task
                 ESOS_ALLOCATE_CHILD_TASK(tskHandle_imTired);
                 ESOS_TASK_SPAWN_AND_WAIT(tskHandle_imTired, encryptUINT, u8t_dataIn);
                 ESOS_TASK_YIELD();
             }
         }
-        else if(u8t_mode == OPMODE_DECRYPT)
+        else if (u8t_mode == OPMODE_DECRYPT)
         {
-            //Check if previously in decrypt mode
-            if(!b_decrypt)
+            // Change LCD Mode
+            LCD_STATE = REPEAT;
+            // Check if previously in decrypt mode
+            if (!b_decrypt)
             {
-                //Send Message
+                // Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_decryptMessage);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-                //Reset key tracker
+                // Reset key tracker
                 u16t_keyTracker = 0;
             }
-            //Set various bools
+            // Set various bools
             b_encrypt = false;
             b_decrypt = true;
             b_toUpper = false;
@@ -1026,27 +1081,36 @@ ESOS_USER_TASK(modeSelect)
             b_commandListPeriod = false;
             b_commandSetPeriod = false;
 
-            if(popBuffer(&cb_recieve, &u8t_dataIn) == 0)
+            if (popBuffer(&cb_recieve, &u8t_dataIn) == 0)
             {
-                //Spawn decrypt task
+                // Spawn decrypt task
                 ESOS_ALLOCATE_CHILD_TASK(tskHandle_imTired);
                 ESOS_TASK_SPAWN_AND_WAIT(tskHandle_imTired, decryptUINT, u8t_dataIn);
                 ESOS_TASK_YIELD();
             }
         }
-        else //OPMODE_ECHO
+        else // OPMODE_ECHO
         {
-            //Check if previously in echo mode
-            if(!b_echo)
+            // Change LCD Mode
+            LCD_STATE = STANDBY;
+            // Check if previously in echo mode
+            if (!b_echo)
             {
-                //Send Message
+                // Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING(pch_echoMessage);
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                 u16t_keyTracker = 0;
+
+                // Reset Repeat Arrays to spaces
+                for (int i = 0; i < 16; i++)
+                {
+                    u8tArr_cipherArr[i] = ' ';
+                    u8tArr_decipherArr[i] = ' ';
+                }
             }
 
-            //Set various bools
+            // Set various bools
             b_encrypt = false;
             b_decrypt = false;
             b_toUpper = false;
@@ -1056,40 +1120,50 @@ ESOS_USER_TASK(modeSelect)
             b_commandListPeriod = false;
             b_commandSetPeriod = false;
 
-            if(popBuffer(&cb_recieve, &u8t_dataIn) == 0)
+            if (popBuffer(&cb_recieve, &u8t_dataIn) == 0)
             {
-                //push to outbound buffer
+                // push to outbound buffer
                 pushBuffer(&cb_send, u8t_dataIn);
             }
 
             ESOS_TASK_YIELD();
         }
-        //Various Checks for half speed
-        if(b_led0_half && esos_hw_sui_isSwitchPressed(h_SW5) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        // Various Checks for half speed
+        if (b_led0_half && esos_hw_sui_isSwitchPressed(h_SW5) && !esos_hw_sui_isSwitchPressed(h_SW1))
         {
             esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period_half);
-        }            
-        else if(b_led1_half && esos_hw_sui_isSwitchPressed(h_SW4) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        }
+        else if (b_led1_half && esos_hw_sui_isSwitchPressed(h_SW4) && !esos_hw_sui_isSwitchPressed(h_SW1))
         {
             esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period_half);
         }
-        else if(b_led2_half && esos_hw_sui_isSwitchPressed(h_SW3) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        else if (b_led2_half && esos_hw_sui_isSwitchPressed(h_SW3) && !esos_hw_sui_isSwitchPressed(h_SW1))
         {
             esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period_half);
+            // LCD PERIOD
+            u32t_lcd_led2_period = u32t_led2_period_half;
         }
-        else if(b_led3_half && esos_hw_sui_isSwitchPressed(h_SW2) && !esos_hw_sui_isSwitchPressed(h_SW1))
+        else if (b_led3_half && esos_hw_sui_isSwitchPressed(h_SW2) && !esos_hw_sui_isSwitchPressed(h_SW1))
         {
             esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period_half);
+            // LCD PERIOD
+            u32t_lcd_led3_period = u32t_led3_period_half;
         }
         else
         {
-            //Return to normal speed
+            // Return to normal speed
             esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period);
             esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period);
             esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period);
             esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period);
-        }
 
+            // LCD PERIOD
+            u32t_lcd_led0_period = u32t_led0_period;
+            u32t_lcd_led1_period = u32t_led1_period;
+            u32t_lcd_led2_period = u32t_led2_period;
+            u32t_lcd_led3_period = u32t_led3_period;
+            u32t_lcd_nucleoLED2_period = u32t_nucleoLED2_period;
+        }
 
         ESOS_TASK_YIELD();
     }
@@ -1100,45 +1174,45 @@ ESOS_USER_TASK(modeSelect)
 //
 //
 //******************** E S O S  T I M E R S ***********************************
-//LED0 Timer
+// LED0 Timer
 ESOS_USER_TIMER(led0)
 {
-    //Toggle LED0
+    // Toggle LED0
     esos_hw_sui_toggleLED(h_LED0);
 }
 
-//LED1 Timer
+// LED1 Timer
 ESOS_USER_TIMER(led1)
 {
-    //Toggle LED1
+    // Toggle LED1
     esos_hw_sui_toggleLED(h_LED1);
 }
 
-//LED2 Timer
+// LED2 Timer
 ESOS_USER_TIMER(led2)
 {
-    //Toggle LED2
+    // Toggle LED2
     esos_hw_sui_toggleLED(h_LED2);
 }
 
-//LED3 Timer
+// LED3 Timer
 ESOS_USER_TIMER(led3)
 {
-    //Toggle LED3
+    // Toggle LED3
     esos_hw_sui_toggleLED(h_LED3);
 }
 
-//Nucleo LED2 Timer
+// Nucleo LED2 Timer
 ESOS_USER_TIMER(nucleoLED2)
 {
-    //Toggle Nucleo LED2
+    // Toggle Nucleo LED2
     esos_hw_sui_toggleLED(h_LED4);
 }
 
-//Command Mode Timer
+// Command Mode Timer
 ESOS_USER_TIMER(commandMode)
 {
-    bool b_buttons[5] = {0,0,0,0,0};
+    bool b_buttons[5] = {0, 0, 0, 0, 0};
     b_buttons[0] = !esos_hw_sui_isSwitchPressed(h_SW1);
     b_buttons[1] = esos_hw_sui_isSwitchPressed(h_SW2);
     b_buttons[2] = esos_hw_sui_isSwitchPressed(h_SW3);
@@ -1155,16 +1229,8 @@ ESOS_USER_TIMER(commandMode)
 //******************** I N I T  F U N C T I O N S *****************************
 void hw_init(void)
 {
-    //Setup LCD
-    esos_lcd44780_configDisplay();
-    __esos_lcd44780_init();
-    //Turn off cursor
-    esos_lcd44780_setCursorDisplay(false);
-    //Default
-    initDisplay();
-
-    //ESOS HW setup
-    //Define LEDs
+    // ESOS HW setup
+    // Define LEDs
     NUCELO_LED2.u32_userData1 = NUCLEO_LED2_Port;
     NUCELO_LED2.u32_userData2 = NUCLEO_LED2_Pin;
 
@@ -1180,7 +1246,7 @@ void hw_init(void)
     EDUB_LED0.u32_userData1 = EDUB_LED0_PORT;
     EDUB_LED0.u32_userData2 = EDUB_LED0_PIN;
 
-    //Define Buttons
+    // Define Buttons
     NUCLEO_SW1.u32_userData1 = NUCLEO_BUTTON_PORT;
     NUCLEO_SW1.u32_userData2 = NUCLEO_BUTTON_PIN;
 
@@ -1196,33 +1262,33 @@ void hw_init(void)
     EDUB_SW5.u32_userData1 = EDUB_SW5_PORT;
     EDUB_SW5.u32_userData2 = EDUB_SW5_PIN;
 
-    //Register LEDs
+    // Register LEDs
     h_LED0 = esos_sui_registerLED(EDUB_LED0.u32_userData1, EDUB_LED0.u32_userData2);
     h_LED1 = esos_sui_registerLED(EDUB_LED1.u32_userData1, EDUB_LED1.u32_userData2);
     h_LED2 = esos_sui_registerLED(EDUB_LED2.u32_userData1, EDUB_LED2.u32_userData2);
     h_LED3 = esos_sui_registerLED(EDUB_LED3.u32_userData1, EDUB_LED3.u32_userData2);
     h_LED4 = esos_sui_registerLED(NUCELO_LED2.u32_userData1, NUCELO_LED2.u32_userData2);
 
-    //Register Buttons
+    // Register Buttons
     h_SW1 = esos_sui_registerSwitch(NUCLEO_SW1.u32_userData1, NUCLEO_SW1.u32_userData2);
     h_SW2 = esos_sui_registerSwitch(EDUB_SW2.u32_userData1, EDUB_SW2.u32_userData2);
     h_SW3 = esos_sui_registerSwitch(EDUB_SW3.u32_userData1, EDUB_SW3.u32_userData2);
     h_SW4 = esos_sui_registerSwitch(EDUB_SW4.u32_userData1, EDUB_SW4.u32_userData2);
     h_SW5 = esos_sui_registerSwitch(EDUB_SW5.u32_userData1, EDUB_SW5.u32_userData2);
 
-    //Setup RCC for buttons and LEDs
+    // Setup RCC for buttons and LEDs
     GPIOA_SETUP_RCC();
     GPIOB_SETUP_RCC();
     GPIOC_SETUP_RCC();
 
-    //Config LEDs
+    // Config LEDs
     esos_hw_sui_configLED(h_LED0);
     esos_hw_sui_configLED(h_LED1);
     esos_hw_sui_configLED(h_LED2);
     esos_hw_sui_configLED(h_LED3);
     esos_hw_sui_configLED(h_LED4);
 
-    //Eduboard Button Setup
+    // Eduboard Button Setup
     EDUB_KEYPAD_ROW0_SETUP();
     EDUB_KEYPAD_ROW1_SETUP();
     EDUB_KEYPAD_ROW2_SETUP();
@@ -1232,31 +1298,39 @@ void hw_init(void)
     EDUB_KEYPAD_COL2_SETUP();
     EDUB_KEYPAD_COL3_SETUP();
 
-    //Config Buttons
+    // Config Buttons
     esos_hw_sui_configSwitch(h_SW1);
     esos_hw_sui_configSwitch(h_SW2);
     esos_hw_sui_configSwitch(h_SW3);
     esos_hw_sui_configSwitch(h_SW4);
     esos_hw_sui_configSwitch(h_SW5);
+
+    // Setup LCD
+    esos_lcd44780_configDisplay();
+    __esos_lcd44780_init();
+    // Turn off cursor
+    esos_lcd44780_setCursorDisplay(false);
+    // Default
+    initDisplay();
 }
 
 void user_init(void)
 {
-    //Initialize Hardware
+    // Initialize Hardware
     hw_init();
 
-    //Initialize Software Structures
+    // Initialize Software Structures
     initBuffer(&cb_recieve, u8t_bufferRecieve, CB_SIZE);
     initBuffer(&cb_send, u8t_bufferSend, CB_SIZE);
     fnst_opmodeInit(&opmode);
 
-    //Initialize ESOS Tasks
+    // Initialize ESOS Tasks
     esos_RegisterTask(recieving);
     esos_RegisterTask(sending);
-    esos_RegisterTask(lcd_manager);
     esos_RegisterTask(modeSelect);
+    esos_RegisterTask(lcd_manager);
 
-    //Register ESOS Timers
+    // Register ESOS Timers
     tmr_handle_LED0 = esos_RegisterTimer(led0, u32t_led0_period);
     tmr_handle_LED1 = esos_RegisterTimer(led1, u32t_led1_period);
     tmr_handle_LED2 = esos_RegisterTimer(led2, u32t_led2_period);

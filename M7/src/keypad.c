@@ -117,11 +117,11 @@ uint16_t keypad_entry(void)
     u16t_keyVals |= (EDUB_KEYC_GETVAL() >> KEYPAD_ROW2_OFFSET) << KEYPAD_KEYC_OFFSET;
     u16t_keyVals |= (EDUB_KEYD_GETVAL() >> KEYPAD_ROW3_OFFSET) << KEYPAD_KEYD_OFFSET;
 
-    //Set Columns to low state (resting)
-    EDUB_KEYPAD_COL0_CLEAR();
-    EDUB_KEYPAD_COL1_CLEAR();
-    EDUB_KEYPAD_COL2_CLEAR();
-    EDUB_KEYPAD_COL3_CLEAR();
+    //Set Columns to hight state
+    EDUB_KEYPAD_COL0_SET();
+    EDUB_KEYPAD_COL1_SET();
+    EDUB_KEYPAD_COL2_SET();
+    EDUB_KEYPAD_COL3_SET();
 
     //Return the uint16_t value
     return u16t_keyVals;
