@@ -10,6 +10,7 @@
 *
 * Revisions:
 * 01ks - 4/5/2023 - Initial version
+* 02ks - 4/23/2023 - Finalize
 */
 //**************** I N C L U D E S ****************
 #include "keypad.h"
@@ -117,11 +118,11 @@ uint16_t keypad_entry(void)
     u16t_keyVals |= (EDUB_KEYC_GETVAL() >> KEYPAD_ROW2_OFFSET) << KEYPAD_KEYC_OFFSET;
     u16t_keyVals |= (EDUB_KEYD_GETVAL() >> KEYPAD_ROW3_OFFSET) << KEYPAD_KEYD_OFFSET;
 
-    //Set Columns to hight state
-    EDUB_KEYPAD_COL0_SET();
-    EDUB_KEYPAD_COL1_SET();
-    EDUB_KEYPAD_COL2_SET();
-    EDUB_KEYPAD_COL3_SET();
+    //Set Columns to low state
+    EDUB_KEYPAD_COL0_CLEAR();
+    EDUB_KEYPAD_COL1_CLEAR();
+    EDUB_KEYPAD_COL2_CLEAR();
+    EDUB_KEYPAD_COL3_CLEAR();
 
     //Return the uint16_t value
     return u16t_keyVals;
@@ -138,7 +139,7 @@ void delay(uint16_t delay)
 }
 
 //Interpret the uint16_t value from the keypad and return direct value, meant to be used with the keypad_entry() function
-char keypad_interpret(uint16_t u16t_keyVals)
+uint8_t keypad_interpret(uint16_t u16t_keyVals)
 {
     if (u16t_keyVals == 0b0000000000000000)
     {

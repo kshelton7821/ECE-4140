@@ -10,6 +10,7 @@
 *
 * Revisions:
 * 01ks - 4/5/2023 - Initial version
+* 02ks - 4/23/2023 - Finalize
 */
 #ifndef KEYPAD_H
 #define KEYPAD_H
@@ -73,6 +74,6 @@ void delay(uint16_t u16t_delay);
 uint16_t keypad_entry(void);
 
 //Interpret the uint16_t value from the keypad and return direct value, meant to be used with the keypad_entry() function
-char keypad_interpret(uint16_t u16t_keyVals);
+uint8_t keypad_interpret(uint16_t u16t_keyVals);
 
 #endif

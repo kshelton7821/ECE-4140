@@ -13,7 +13,7 @@
 #define ESOS_STM32L4_EDUB_H
 
 //************ I N C L U D E S ************
-#include "ptb.h"
+//#include "ptb.h"
 
 
 //************ D E F I N E S ************
@@ -34,7 +34,7 @@
 #define EDUB_LCDE_PORT GPIOA
 
 //USE 4Bit
-#define ESOS_USE_LCD_4BIT 1
+//#define ESOS_USE_LCD_4BIT 
 
 //******************* L C D  R E L A T E D  S T R U C T S *******************
 //LCD MODE
