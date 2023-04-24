@@ -97,7 +97,7 @@ uint8_t volatile u8tArr_periodSet[4] = {0, 0, 0, 0};
 uint8_t volatile u8t_periodSetLCDTracker = 0;
 
 // Show Period Array UART
-char volatile u8tArr_showPeriod[5] = {'0', '0', '0', '0', '0'};
+char volatile u8tArr_showPeriod[4] = {'0', '0', '0', '0'};
 
 // Encryption State / Other Mode Bools.
 bool volatile b_encrypt = false, b_decrypt = false, b_toUpper = false, b_rmNonAlpha = false, b_echo = false, b_commandMode = false, b_commandSetPeriod = false, b_commandListPeriod = false;
@@ -316,6 +316,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_WAIT_ON_SEND_STRING(" ms\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+            //Reset period array
         }
         else if (u8t_dataIN == '1')
         {
@@ -669,7 +670,7 @@ ESOS_USER_TASK(lcd_manager)
         // Get Keys
         u16t_tempKeys = keypad_entry();
 
-        //Check for edit mode
+        //Check for== KEYPAD_KEYD_MASK edit mode
         if (u16t_tempKeys & KEYPAD_KEYD_MASK)
         {
             //This turns on the edit mode, this shit is fucked in

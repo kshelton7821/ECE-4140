@@ -115,7 +115,6 @@ _st_esos_sui_Switch EDUB_SW5;
 ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
 {
     static uint8_t u8tArr_periodSet[4] = {0, 0, 0, 0};
-    static char u8tArr_showPeriod[4] = {'0', '0', '0', '0'};
     static uint8_t u8t_led;
     ESOS_TASK_BEGIN();
     //Check for Command
@@ -157,7 +156,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             //Send LED1 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
@@ -167,7 +166,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             //Send LED2 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
@@ -177,7 +176,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             //Send LED3 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
@@ -187,7 +186,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             //Send Nucleo LED2 Period
             ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_periodValue);
-            ESOS_TASK_WAIT_ON_SEND_U8BUFFER(&u8tArr_showPeriod[0], 4);
+            ESOS_TASK_WAIT_ON_SEND_STRING(u8tArr_showPeriod);
             ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
         }
