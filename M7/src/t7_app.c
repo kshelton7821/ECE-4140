@@ -664,23 +664,6 @@ ESOS_USER_TASK(lcd_manager)
         // Get Keys
         u16t_tempKeys = keypad_entry();
 
-        //Check for== KEYPAD_KEYD_MASK edit mode
-        if (u16t_tempKeys & KEYPAD_KEYD_MASK)
-        {
-            //This turns on the edit mode, this shit is fucked in
-            // the LCD manager TASK, this might could be done in a child
-            // task that is seperate from the other tasks as this crap 
-            // interferes with the mode selector and pretty much everything else
-
-            //MOVE THIS TO ACTIVATE IN MODE MANAGER. SPECIFICALLY FOR ANOTHER FUNCTION LIKE ENCRYPT
-
-            //Enable Edit Mode
-            //b_editPeriod = true;
-            //LCD_STATE = EDIT;
-            ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
-            ESOS_TASK_WAIT_ON_SEND_STRING("EDIT MODE\r\n");
-            ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-        }
         // Check LCD State
         if (LCD_STATE == STANDBY)
         {
@@ -880,8 +863,66 @@ ESOS_USER_TASK(lcd_manager)
             //Begin Updates
             if (LED_STATE == LED0)
             {
-                //Wait for Debounce
+                //Wait for Debounce from D key
                 ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                //Reset u8t_tempNum
+                u8t_tempNum = ' ';
+                //NEW STUFF TO TEST
+                //Get it stuck in a loop until the user presses the * key
+                while(u8t_tempNum != '*')
+                {
+                    //Read Keypad
+                    u16t_tempKeys = keypad_entry();
+                    //Wait for letgo
+                    ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    //Check if it is a number
+                    if(u16t_tempKeys & KEYPAD_ONLY_NUMS)
+                    {
+                        //Acquire the number
+                        u8t_tempNum = keypad_interpret(u16t_tempKeys);
+                        //Shift into the array
+                        leftShifter(&u8tArr_inputPeriodLCD, u8t_tempNum, (sizeof(u8tArr_inputPeriodLCD)/sizeof(u8tArr_inputPeriodLCD[0])));
+                        //Wait
+                        ESOS_TASK_WAIT_TICKS(300);
+                    }
+                    //No Entry Update Display
+                    else
+                    {
+                        //Clear Display
+                        esos_lcd44780_clearScreen();
+                        //LED0
+                        esos_lcd44780_writeString(0, 1, "LED0");
+                        //Current Buffer
+                        esos_lcd44780_writeString(0, 9, u8tArr_inputPeriodLCD);
+                        //ms
+                        esos_lcd44780_writeString(0, 13, "ms");
+                        //Confirm Message
+                        esos_lcd44780_writeString(1, 1, "Press * to Confirm");
+                    }
+                }
+                //Loop is broken, user has pressed *
+                //Delete '_' from the array
+                for (int i = 0; i < 4; i++)
+                {
+                    if(u8tArr_inputPeriodLCD[i] == '_')
+                    {
+                        u8tArr_inputPeriodLCD[i] = '0';
+                    }
+                }
+
+                //Set New Period
+                u32t_lcd_led0_period = atoi(u8tArr_inputPeriodLCD);
+                //Set Timer
+                esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_lcd_led0_period);
+                //Set LCD State back to Standby
+                LCD_STATE = STANDBY;
+                //Finally Release
+                ESOS_TASK_YIELD();
+
+
+
+
+                //OLD SHIT THAT DOESN'T WORK TOO LATE TO TEST IM TIRED
                 //Reset Number to Empty
                 u8t_tempNum = ' ';
                 //Check for Number
@@ -1175,6 +1216,13 @@ ESOS_USER_TASK(lcd_manager)
         }
         else // LCD_STATE == REPEAT
         {
+            //TEST THIS
+            //Check for Keypad Entry State coming from REPEAT MODE
+            if (u16t_tempKeys & KEYPAD_KEYD_MASK)
+            {
+                //GOTO EDIT MODE
+                LCD_STATE = EDIT;
+            }
             //Row 0
             esos_lcd44780_writeString(0, 0, u8tArr_decipherArr);
             //Row 1
@@ -1236,11 +1284,6 @@ ESOS_USER_TASK(modeSelect)
     ESOS_TASK_BEGIN();
     while (1)
     {
-        // Check for LCD EDIT
-        if(b_editPeriod)
-        {
-            ESOS_TASK_YIELD();
-        }
         // If in command mode
         if (!esos_hw_sui_isSwitchPressed(h_SW1))
         {
