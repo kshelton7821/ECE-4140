@@ -2,8 +2,8 @@
  * Authors: Keaton Shelton, Josh White, and Emma Brown
  * Date: 4/5/2023
  *
- * Abstract: This is the main file for the M5 project. It contains the main program that
- *     that is an expanded version of M4 and M5. This time with EduBoard :)
+ * Abstract: This is the main file for the M7 project. It contains the main program that
+ *     that is an expanded version of M4, M5, and M6. This time with EduBoard :)
  *
  *
  *
@@ -24,8 +24,12 @@
  *    and instead just directly insert the string into the function call. I have done this for all the strings in this program except for a very
  *    few specific ones that did not break. It has no utter consistency, changing one string call in an unrelated task can break the
  *    output of a string call in another task. Like I said, it has to be some type of bounds issue resulting in reading from other parts
- *    of memory. Anyways, onto actual changes:
+ *    of memory. Anyways, onto actual changes: Honestly nothing, just bug discovery and rage comments
+ * 08ks 4/26/2023: M7 LCD Period Display Control Working, LCD Encrypt / Decrypt Working, LCD Period Set Finally Working. Program Twice as long as M6 lol.
  *    
+ * Other Notes: Hey Triston. Normally I cut out all of my rage comments before I submit my code, but I decided
+ *  to leave them in this time for your enjoyment. Truly Yours, Keaton Shelton
+ *
  */
 //******************** I N C L U D E S ***************************************
 #include "ptb.h"
@@ -53,21 +57,21 @@ uint16_t volatile u16t_keyTracker = 0;
 
 // Message Strings (ALL VOIDED OUT IN REPLACEMENT OF DIRECT STRING INSERTS)
 char *pch_key = "BOLDFEARLESSCONFIDENT";
-//char *pch_rmNonAlphaMessage = "\nRemove Non Alpha Mode Active\r\n";
-//char *pch_toUpperMessage = "\nTo Upper Mode Active\r\n";
-//char *pch_echoMessage = "\nEcho Mode Active\r\n";
-//char *pch_encryptMessage = "\nEncypting Mode Active\r\n";
-//char *pch_decryptMessage = "\nDecrypting Mode Active\r\n";
-//THIS IS THE ONLY CHAR* ARRAY THAT DOES NOT BREAK?????
+// char *pch_rmNonAlphaMessage = "\nRemove Non Alpha Mode Active\r\n";
+// char *pch_toUpperMessage = "\nTo Upper Mode Active\r\n";
+// char *pch_echoMessage = "\nEcho Mode Active\r\n";
+// char *pch_encryptMessage = "\nEncypting Mode Active\r\n";
+// char *pch_decryptMessage = "\nDecrypting Mode Active\r\n";
+// THIS IS THE ONLY CHAR* ARRAY THAT DOES NOT BREAK?????
 char *pch_startMessage = "\nWelcome to Milestone 7, Vigenere Cipher and Other Functions\r\n";
-//char *pch_commandMessage = "\nCommand Mode Intiated, Please Enter L to List Period\r\nOr Enter S to Set Period\r\n\0";
-//char *pch_commandMessage = "\n Command Mode\r\n";
-//char *pch_commandSetPeriod = "\nCommand Mode Set Period, Please Enter LED Number n\r\n";
-//char *pch_commandExit = "\nExiting Command Mode\r\n";
-//char *pch_commandSuccess = "\nExiting Command Mode\r\nTimer Set To: ";
-//char *pch_commandMS = " ms\r\n";
-//char *pch_errorMessage = "\nError, Invalid Command\r\n";
-//char *pch_periodValue = "\nPeriod Value: ";
+// char *pch_commandMessage = "\nCommand Mode Intiated, Please Enter L to List Period\r\nOr Enter S to Set Period\r\n\0";
+// char *pch_commandMessage = "\n Command Mode\r\n";
+// char *pch_commandSetPeriod = "\nCommand Mode Set Period, Please Enter LED Number n\r\n";
+// char *pch_commandExit = "\nExiting Command Mode\r\n";
+// char *pch_commandSuccess = "\nExiting Command Mode\r\nTimer Set To: ";
+// char *pch_commandMS = " ms\r\n";
+// char *pch_errorMessage = "\nError, Invalid Command\r\n";
+// char *pch_periodValue = "\nPeriod Value: ";
 
 // Timer Periods
 uint32_t volatile u32t_led0_period = 1000;
@@ -233,7 +237,7 @@ void initDisplay(void)
 
     // Clear Display
     esos_lcd44780_clearScreen();
-    //ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
+    // ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
 
     //****** Row 0 ******
     // No Up Arrow
@@ -259,7 +263,7 @@ void initDisplay(void)
     // Down Arrow
     esos_lcd44780_writeChar(1, 0, 'v');
     // Edit Message
-    esos_lcd44780_writeString(1, 1, "Press D to Edit");
+    esos_lcd44780_writeString(1, 1, "SW4 & D to Edit");
 }
 
 void leftShifter(uint8_t *u8t_array, uint8_t u8t_in, size_t size)
@@ -316,7 +320,7 @@ ESOS_CHILD_TASK(interpretter, uint8_t u8t_dataIN)
             // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMS);
             ESOS_TASK_WAIT_ON_SEND_STRING(" ms\r\n");
             ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-            //Reset period array
+            // Reset period array
         }
         else if (u8t_dataIN == '1')
         {
@@ -658,6 +662,7 @@ ESOS_USER_TASK(lcd_manager)
     // Show Period Array LCD
     static uint8_t u8tArr_tempPeriodOut[4] = {'0', '0', '0', '0'};
     static uint8_t u8tArr_periodSetLCD[4] = {'_', '_', '_', '_'};
+    static uint32_t u32t_tempPeriod = 0;
     ESOS_TASK_BEGIN();
     while (1)
     {
@@ -709,7 +714,7 @@ ESOS_USER_TASK(lcd_manager)
                 // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
                 // Edit Message
-                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                esos_lcd44780_writeString(1, 1, "SW4 & D to Edit");
                 for (int i = 0; i < 4; i++)
                 {
                     u8tArr_tempPeriodOut[i] = '0';
@@ -748,7 +753,7 @@ ESOS_USER_TASK(lcd_manager)
                 // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
                 // Edit Message
-                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                esos_lcd44780_writeString(1, 1, "SW4 & D to Edit");
                 // Wait for Debounce
                 ESOS_TASK_WAIT_TICKS(100);
                 ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
@@ -782,7 +787,7 @@ ESOS_USER_TASK(lcd_manager)
                 // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
                 // Edit Message
-                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                esos_lcd44780_writeString(1, 1, "SW4 & D to Edit");
                 // Wait for Debounce
                 ESOS_TASK_WAIT_TICKS(100);
                 ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
@@ -816,7 +821,7 @@ ESOS_USER_TASK(lcd_manager)
                 // Down Arrow
                 esos_lcd44780_writeChar(1, 0, 'v');
                 // Edit Message
-                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                esos_lcd44780_writeString(1, 1, "SW4 & D to Edit");
                 // Wait for Debounce
                 ESOS_TASK_WAIT_TICKS(100);
                 ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
@@ -850,7 +855,7 @@ ESOS_USER_TASK(lcd_manager)
                 // No Down Arrow
                 esos_lcd44780_writeChar(1, 0, ' ');
                 // Edit Message
-                esos_lcd44780_writeString(1, 1, "Press D to Edit");
+                esos_lcd44780_writeString(1, 1, "SW4 & D to Edit");
                 // Wait for Debounce
                 ESOS_TASK_WAIT_TICKS(100);
                 ESOS_TASK_WAIT_ON_LCD44780_REFRESH();
@@ -859,90 +864,456 @@ ESOS_USER_TASK(lcd_manager)
         }
         else if (LCD_STATE == EDIT)
         {
-            //DEV
-            ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
-            ESOS_TASK_WAIT_ON_SEND_STRING("Made it to Edit!\r\n");
-            ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-            //Begin Updates
+            // Wait for Debounce from D key
+            ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+            // Reset u8t_tempNum
+            u8t_tempNum = ' ';
+            // NEW STUFF TO TEST
+            // Get it stuck in a loop until the user presses the * key
+            // Begin Updates
             if (LED_STATE == LED0)
             {
-                //Wait for Debounce from D key
-                ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
-                //Reset u8t_tempNum
-                u8t_tempNum = ' ';
-                //NEW STUFF TO TEST
-                //Get it stuck in a loop until the user presses the * key
                 do
                 {
                     // Get Keys
                     u16t_tempKeys = keypad_entry();
-                    //WAIT FOR DEBOUNCE
+                    // WAIT FOR DEBOUNCE
                     ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
-                    //Acquire the number
+                    // Acquire the number
                     u8t_tempNum = keypad_interpret(u16t_tempKeys);
-                    //Check if it is a number
-                    if(u16t_tempKeys & KEYPAD_ONLY_NUMS)
+                    // Check if it is a number
+                    if (u16t_tempKeys & KEYPAD_ONLY_NUMS)
                     {
-                        //Shift into the array
-                        leftShifter(&u8tArr_periodSetLCD, u8t_tempNum, (sizeof(u8tArr_periodSetLCD)/sizeof(u8tArr_periodSetLCD[0])));
-                        //Wait
+                        // Shift into the array
+                        leftShifter(&u8tArr_periodSetLCD, u8t_tempNum, (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])));
+                        // Wait
                         ESOS_TASK_WAIT_TICKS(300);
                         ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
                     }
-                    //No Entry Update Display
+                    // No Entry Update Display
                     else
                     {
-                        //Clear Display
+                        // Clear Display
                         esos_lcd44780_clearScreen();
-                        //LED0
+                        // LED0
                         esos_lcd44780_writeString(0, 1, "LED0");
-                        //Current Buffer
-                        //esos_lcd44780_writeString(0, 9, u8tArr_periodSetLCD);
+                        // Current Buffer
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER AND PRINTING 3 RANDOM 0'S, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        // esos_lcd44780_writeString(0, 9, u8tArr_periodSetLCD);
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER IT IS EXACTLY 4 BYTES LONG, WHY? WHO KNOWS I DONT CARE AT THIS POINT
                         esos_lcd44780_writeChar(0, 9, u8tArr_periodSetLCD[0]);
                         esos_lcd44780_writeChar(0, 10, u8tArr_periodSetLCD[1]);
                         esos_lcd44780_writeChar(0, 11, u8tArr_periodSetLCD[2]);
                         esos_lcd44780_writeChar(0, 12, u8tArr_periodSetLCD[3]);
-                        //esos_lcd44780_writeBuffer(0, 9, u8tArr_periodSetLCD, 4);
-                        //ms
-                        //esos_lcd44780_writeString(0, 14, "ms");
-                        //Confirm Message
+                        // SAME PROBLEM
+                        // esos_lcd44780_writeBuffer(0, 9, u8tArr_periodSetLCD, 4);
+                        // ms
+                        esos_lcd44780_writeString(0, 14, "ms");
+                        // Confirm Message
                         esos_lcd44780_writeString(1, 1, "Press * to Save");
                         ESOS_TASK_WAIT_TICKS(300);
                     }
-                    //IN LOOP
+                    // IN LOOP
                     ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
-                    ESOS_TASK_WAIT_ON_SEND_STRING("Made it to LED0 Loop!\r\n");
+                    ESOS_TASK_WAIT_ON_SEND_STRING("LED0 Editing Mode! All other functionality Disabled\r\n");
                     ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                     ESOS_TASK_WAIT_TICKS(500);
-                } while(u8t_tempNum != '*');
-                //Loop is broken, user has pressed *
-                //Delete '_' from the array
-                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD)/sizeof(u8tArr_periodSetLCD[0])); i++)
+                } while (u8t_tempNum != '*');
+                // Loop is broken, user has pressed *
+                // Delete '_' from the array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
                 {
-                    if(u8tArr_periodSetLCD[i] == '_')
+                    if (u8tArr_periodSetLCD[i] == '_')
                     {
                         u8tArr_periodSetLCD[i] = '0';
                     }
                 }
 
-                //Set New Period
-                u32t_led0_period = atoi(u8tArr_periodSetLCD);
-                u32t_led0_period = u32t_led0_period / 1000;
-                //Set Timer
+                // Set New Period
+                // SOMEHOW atoi is broke in this instance? Overshoots buffer array and now
+                // Ive got to do some crap with exact bytes and adding individual values
+                // u32t_led0_period = atoi(u8tArr_periodSetLCD);
+                // Reset temp value
+                u32t_tempPeriod = 0;
+                // Add the values
+                u32t_tempPeriod += (u8tArr_periodSetLCD[0] - '0') * 1000; // Thousands
+                u32t_tempPeriod += (u8tArr_periodSetLCD[1] - '0') * 100;  // Hundreds
+                u32t_tempPeriod += (u8tArr_periodSetLCD[2] - '0') * 10;   // Tens
+                u32t_tempPeriod += (u8tArr_periodSetLCD[3] - '0');        // Ones
+                // Set the new period
+                u32t_led0_period = u32t_tempPeriod;
+
+                // Set Timer
                 esos_ChangeTimerPeriod(tmr_handle_LED0, u32t_led0_period);
-                //Set LCD State back to Standby
+                // Set LCD State back to Standby
                 LCD_STATE = STANDBY;
-                //No longer editing period
+                // No longer editing period
                 b_editPeriod = false;
-                //Reset Array
-                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD)/sizeof(u8tArr_periodSetLCD[0])); i++)
+                // Reset Array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
                 {
                     u8tArr_periodSetLCD[i] = '_';
                 }
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
-                ESOS_TASK_WAIT_ON_SEND_STRING("Made it to LED0!");
+                ESOS_TASK_WAIT_ON_SEND_STRING("LED0 New Period Set!\r\n");
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
-                //Finally Release
+                // Finally Release
+                ESOS_TASK_YIELD();
+            }
+            else if (LED_STATE == LED1)
+            {
+                do
+                {
+                    // Get Keys
+                    u16t_tempKeys = keypad_entry();
+                    // WAIT FOR DEBOUNCE
+                    ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    // Acquire the number
+                    u8t_tempNum = keypad_interpret(u16t_tempKeys);
+                    // Check if it is a number
+                    if (u16t_tempKeys & KEYPAD_ONLY_NUMS)
+                    {
+                        // Shift into the array
+                        leftShifter(&u8tArr_periodSetLCD, u8t_tempNum, (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])));
+                        // Wait
+                        ESOS_TASK_WAIT_TICKS(300);
+                        ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    }
+                    // No Entry Update Display
+                    else
+                    {
+                        // Clear Display
+                        esos_lcd44780_clearScreen();
+                        // LED1
+                        esos_lcd44780_writeString(0, 1, "LED1");
+                        // Current Buffer
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER AND PRINTING 3 RANDOM 0'S, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        // esos_lcd44780_writeString(0, 9, u8tArr_periodSetLCD);
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER IT IS EXACTLY 4 BYTES LONG, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        esos_lcd44780_writeChar(0, 9, u8tArr_periodSetLCD[0]);
+                        esos_lcd44780_writeChar(0, 10, u8tArr_periodSetLCD[1]);
+                        esos_lcd44780_writeChar(0, 11, u8tArr_periodSetLCD[2]);
+                        esos_lcd44780_writeChar(0, 12, u8tArr_periodSetLCD[3]);
+                        // SAME PROBLEM
+                        // esos_lcd44780_writeBuffer(0, 9, u8tArr_periodSetLCD, 4);
+                        // ms
+                        esos_lcd44780_writeString(0, 14, "ms");
+                        // Confirm Message
+                        esos_lcd44780_writeString(1, 1, "Press * to Save");
+                        ESOS_TASK_WAIT_TICKS(300);
+                    }
+                    // IN LOOP
+                    ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_ON_SEND_STRING("LED1 Editing Mode! All other functionality Disabled\r\n");
+                    ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_TICKS(500);
+                } while (u8t_tempNum != '*');
+                // Loop is broken, user has pressed *
+                // Delete '_' from the array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    if (u8tArr_periodSetLCD[i] == '_')
+                    {
+                        u8tArr_periodSetLCD[i] = '0';
+                    }
+                }
+
+                // Set New Period
+                // SOMEHOW atoi is broke in this instance? Overshoots buffer array and now
+                // Ive got to do some crap with exact bytes and adding individual values
+                // u32t_led0_period = atoi(u8tArr_periodSetLCD);
+                // Reset temp value
+                u32t_tempPeriod = 0;
+                // Add the values
+                u32t_tempPeriod += (u8tArr_periodSetLCD[0] - '0') * 1000; // Thousands
+                u32t_tempPeriod += (u8tArr_periodSetLCD[1] - '0') * 100;  // Hundreds
+                u32t_tempPeriod += (u8tArr_periodSetLCD[2] - '0') * 10;   // Tens
+                u32t_tempPeriod += (u8tArr_periodSetLCD[3] - '0');        // Ones
+                // Set the new period
+                u32t_led1_period = u32t_tempPeriod;
+
+                // Set Timer
+                esos_ChangeTimerPeriod(tmr_handle_LED1, u32t_led1_period);
+                // Set LCD State back to Standby
+                LCD_STATE = STANDBY;
+                // No longer editing period
+                b_editPeriod = false;
+                // Reset Array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    u8tArr_periodSetLCD[i] = '_';
+                }
+                ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                ESOS_TASK_WAIT_ON_SEND_STRING("LED1 New Period Set!\r\n");
+                ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                // Finally Release
+                ESOS_TASK_YIELD();
+            }
+            else if (LED_STATE == LED2)
+            {
+                do
+                {
+                    // Get Keys
+                    u16t_tempKeys = keypad_entry();
+                    // WAIT FOR DEBOUNCE
+                    ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    // Acquire the number
+                    u8t_tempNum = keypad_interpret(u16t_tempKeys);
+                    // Check if it is a number
+                    if (u16t_tempKeys & KEYPAD_ONLY_NUMS)
+                    {
+                        // Shift into the array
+                        leftShifter(&u8tArr_periodSetLCD, u8t_tempNum, (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])));
+                        // Wait
+                        ESOS_TASK_WAIT_TICKS(300);
+                        ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    }
+                    // No Entry Update Display
+                    else
+                    {
+                        // Clear Display
+                        esos_lcd44780_clearScreen();
+                        // LED1
+                        esos_lcd44780_writeString(0, 1, "LED2");
+                        // Current Buffer
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER AND PRINTING 3 RANDOM 0'S, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        // esos_lcd44780_writeString(0, 9, u8tArr_periodSetLCD);
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER IT IS EXACTLY 4 BYTES LONG, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        esos_lcd44780_writeChar(0, 9, u8tArr_periodSetLCD[0]);
+                        esos_lcd44780_writeChar(0, 10, u8tArr_periodSetLCD[1]);
+                        esos_lcd44780_writeChar(0, 11, u8tArr_periodSetLCD[2]);
+                        esos_lcd44780_writeChar(0, 12, u8tArr_periodSetLCD[3]);
+                        // SAME PROBLEM
+                        // esos_lcd44780_writeBuffer(0, 9, u8tArr_periodSetLCD, 4);
+                        // ms
+                        esos_lcd44780_writeString(0, 14, "ms");
+                        // Confirm Message
+                        esos_lcd44780_writeString(1, 1, "Press * to Save");
+                        ESOS_TASK_WAIT_TICKS(300);
+                    }
+                    // IN LOOP
+                    ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_ON_SEND_STRING("LED2 Editing Mode! All other functionality Disabled\r\n");
+                    ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_TICKS(500);
+                } while (u8t_tempNum != '*');
+                // Loop is broken, user has pressed *
+                // Delete '_' from the array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    if (u8tArr_periodSetLCD[i] == '_')
+                    {
+                        u8tArr_periodSetLCD[i] = '0';
+                    }
+                }
+
+                // Set New Period
+                // SOMEHOW atoi is broke in this instance? Overshoots buffer array and now
+                // Ive got to do some crap with exact bytes and adding individual values
+                // u32t_led0_period = atoi(u8tArr_periodSetLCD);
+                // Reset temp value
+                u32t_tempPeriod = 0;
+                // Add the values
+                u32t_tempPeriod += (u8tArr_periodSetLCD[0] - '0') * 1000; // Thousands
+                u32t_tempPeriod += (u8tArr_periodSetLCD[1] - '0') * 100;  // Hundreds
+                u32t_tempPeriod += (u8tArr_periodSetLCD[2] - '0') * 10;   // Tens
+                u32t_tempPeriod += (u8tArr_periodSetLCD[3] - '0');        // Ones
+                // Set the new period
+                u32t_led2_period = u32t_tempPeriod;
+
+                // Set Timer
+                esos_ChangeTimerPeriod(tmr_handle_LED2, u32t_led2_period);
+                // Set LCD State back to Standby
+                LCD_STATE = STANDBY;
+                // No longer editing period
+                b_editPeriod = false;
+                // Reset Array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    u8tArr_periodSetLCD[i] = '_';
+                }
+                ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                ESOS_TASK_WAIT_ON_SEND_STRING("LED2 New Period Set!\r\n");
+                ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                // Finally Release
+                ESOS_TASK_YIELD();
+            }
+            else if (LED_STATE == LED3)
+            {
+                do
+                {
+                    // Get Keys
+                    u16t_tempKeys = keypad_entry();
+                    // WAIT FOR DEBOUNCE
+                    ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    // Acquire the number
+                    u8t_tempNum = keypad_interpret(u16t_tempKeys);
+                    // Check if it is a number
+                    if (u16t_tempKeys & KEYPAD_ONLY_NUMS)
+                    {
+                        // Shift into the array
+                        leftShifter(&u8tArr_periodSetLCD, u8t_tempNum, (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])));
+                        // Wait
+                        ESOS_TASK_WAIT_TICKS(300);
+                        ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    }
+                    // No Entry Update Display
+                    else
+                    {
+                        // Clear Display
+                        esos_lcd44780_clearScreen();
+                        // LED1
+                        esos_lcd44780_writeString(0, 1, "LED3");
+                        // Current Buffer
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER AND PRINTING 3 RANDOM 0'S, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        // esos_lcd44780_writeString(0, 9, u8tArr_periodSetLCD);
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER IT IS EXACTLY 4 BYTES LONG, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        esos_lcd44780_writeChar(0, 9, u8tArr_periodSetLCD[0]);
+                        esos_lcd44780_writeChar(0, 10, u8tArr_periodSetLCD[1]);
+                        esos_lcd44780_writeChar(0, 11, u8tArr_periodSetLCD[2]);
+                        esos_lcd44780_writeChar(0, 12, u8tArr_periodSetLCD[3]);
+                        // SAME PROBLEM
+                        // esos_lcd44780_writeBuffer(0, 9, u8tArr_periodSetLCD, 4);
+                        // ms
+                        esos_lcd44780_writeString(0, 14, "ms");
+                        // Confirm Message
+                        esos_lcd44780_writeString(1, 1, "Press * to Save");
+                        ESOS_TASK_WAIT_TICKS(300);
+                    }
+                    // IN LOOP
+                    ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_ON_SEND_STRING("LED3 Editing Mode! All other functionality Disabled\r\n");
+                    ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_TICKS(500);
+                } while (u8t_tempNum != '*');
+                // Loop is broken, user has pressed *
+                // Delete '_' from the array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    if (u8tArr_periodSetLCD[i] == '_')
+                    {
+                        u8tArr_periodSetLCD[i] = '0';
+                    }
+                }
+
+                // Set New Period
+                // SOMEHOW atoi is broke in this instance? Overshoots buffer array and now
+                // Ive got to do some crap with exact bytes and adding individual values
+                // u32t_led0_period = atoi(u8tArr_periodSetLCD);
+                // Reset temp value
+                u32t_tempPeriod = 0;
+                // Add the values
+                u32t_tempPeriod += (u8tArr_periodSetLCD[0] - '0') * 1000; // Thousands
+                u32t_tempPeriod += (u8tArr_periodSetLCD[1] - '0') * 100;  // Hundreds
+                u32t_tempPeriod += (u8tArr_periodSetLCD[2] - '0') * 10;   // Tens
+                u32t_tempPeriod += (u8tArr_periodSetLCD[3] - '0');        // Ones
+                // Set the new period
+                u32t_led3_period = u32t_tempPeriod;
+
+                // Set Timer
+                esos_ChangeTimerPeriod(tmr_handle_LED3, u32t_led3_period);
+                // Set LCD State back to Standby
+                LCD_STATE = STANDBY;
+                // No longer editing period
+                b_editPeriod = false;
+                // Reset Array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    u8tArr_periodSetLCD[i] = '_';
+                }
+                ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                ESOS_TASK_WAIT_ON_SEND_STRING("LED3 New Period Set!\r\n");
+                ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                // Finally Release
+                ESOS_TASK_YIELD();
+            }
+            else if (LED_STATE == LED4)
+            {
+                do
+                {
+                    // Get Keys
+                    u16t_tempKeys = keypad_entry();
+                    // WAIT FOR DEBOUNCE
+                    ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    // Acquire the number
+                    u8t_tempNum = keypad_interpret(u16t_tempKeys);
+                    // Check if it is a number
+                    if (u16t_tempKeys & KEYPAD_ONLY_NUMS)
+                    {
+                        // Shift into the array
+                        leftShifter(&u8tArr_periodSetLCD, u8t_tempNum, (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])));
+                        // Wait
+                        ESOS_TASK_WAIT_TICKS(300);
+                        ESOS_TASK_WAIT_UNTIL((keypad_entry()) == 0);
+                    }
+                    // No Entry Update Display
+                    else
+                    {
+                        // Clear Display
+                        esos_lcd44780_clearScreen();
+                        // LED1
+                        esos_lcd44780_writeString(0, 1, "LED4");
+                        // Current Buffer
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER AND PRINTING 3 RANDOM 0'S, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        // esos_lcd44780_writeString(0, 9, u8tArr_periodSetLCD);
+                        // STUPID POINTER CRAP OVERSHOOTING THE BUFFER IT IS EXACTLY 4 BYTES LONG, WHY? WHO KNOWS I DONT CARE AT THIS POINT
+                        esos_lcd44780_writeChar(0, 9, u8tArr_periodSetLCD[0]);
+                        esos_lcd44780_writeChar(0, 10, u8tArr_periodSetLCD[1]);
+                        esos_lcd44780_writeChar(0, 11, u8tArr_periodSetLCD[2]);
+                        esos_lcd44780_writeChar(0, 12, u8tArr_periodSetLCD[3]);
+                        // SAME PROBLEM
+                        // esos_lcd44780_writeBuffer(0, 9, u8tArr_periodSetLCD, 4);
+                        // ms
+                        esos_lcd44780_writeString(0, 14, "ms");
+                        // Confirm Message
+                        esos_lcd44780_writeString(1, 1, "Press * to Save");
+                        ESOS_TASK_WAIT_TICKS(300);
+                    }
+                    // IN LOOP
+                    ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_ON_SEND_STRING("LED4 Editing Mode! All other functionality Disabled\r\n");
+                    ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                    ESOS_TASK_WAIT_TICKS(500);
+                } while (u8t_tempNum != '*');
+                // Loop is broken, user has pressed *
+                // Delete '_' from the array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    if (u8tArr_periodSetLCD[i] == '_')
+                    {
+                        u8tArr_periodSetLCD[i] = '0';
+                    }
+                }
+
+                // Set New Period
+                // SOMEHOW atoi is broke in this instance? Overshoots buffer array and now
+                // Ive got to do some crap with exact bytes and adding individual values
+                // u32t_led0_period = atoi(u8tArr_periodSetLCD);
+                // Reset temp value
+                u32t_tempPeriod = 0;
+                // Add the values
+                u32t_tempPeriod += (u8tArr_periodSetLCD[0] - '0') * 1000; // Thousands
+                u32t_tempPeriod += (u8tArr_periodSetLCD[1] - '0') * 100;  // Hundreds
+                u32t_tempPeriod += (u8tArr_periodSetLCD[2] - '0') * 10;   // Tens
+                u32t_tempPeriod += (u8tArr_periodSetLCD[3] - '0');        // Ones
+                // Set the new period
+                u32t_nucleoLED2_period = u32t_tempPeriod;
+
+                // Set Timer
+                esos_ChangeTimerPeriod(tmr_handle_nucleoLED2, u32t_nucleoLED2_period);
+                // Set LCD State back to Standby
+                LCD_STATE = STANDBY;
+                // No longer editing period
+                b_editPeriod = false;
+                // Reset Array
+                for (int i = 0; i < (sizeof(u8tArr_periodSetLCD) / sizeof(u8tArr_periodSetLCD[0])); i++)
+                {
+                    u8tArr_periodSetLCD[i] = '_';
+                }
+                ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
+                ESOS_TASK_WAIT_ON_SEND_STRING("LED4 New Period Set!\r\n");
+                ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
+                // Finally Release
                 ESOS_TASK_YIELD();
             }
         }
@@ -950,22 +1321,21 @@ ESOS_USER_TASK(lcd_manager)
         {
             // Get Keys
             u16t_tempKeys = keypad_entry();
-            //TEST THIS
-            //Check for Keypad Entry State coming from REPEAT MODE
+            // TEST THIS
+            // Check for Keypad Entry State coming from REPEAT MODE
             if (u16t_tempKeys & KEYPAD_KEYD_MASK)
             {
-                //GOTO EDIT MODE
+                // GOTO EDIT MODE
                 LCD_STATE = EDIT;
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_ON_SEND_STRING("EDIT MODE");
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                 ESOS_TASK_WAIT_UNTIL(keypad_entry() == 0);
                 b_editPeriod = true;
-
             }
-            //Row 0
+            // Row 0
             esos_lcd44780_writeString(0, 0, u8tArr_decipherArr);
-            //Row 1
+            // Row 1
             esos_lcd44780_writeString(1, 0, u8tArr_cipherArr);
         }
         ESOS_TASK_YIELD();
@@ -1058,22 +1428,22 @@ ESOS_USER_TASK(modeSelect)
             // Check if previously in command mode
             if (!b_commandMode)
             {
-                //UPDATE BLOCK
-                // Took out all this send string for command mode.
-                // Why? Utterly breaks when LCD manager is enabled, don't ask my why
-                // Since I can't tell you. Has to be some random ESOS crap that I'm tired
-                // of trying to figure out. -KS
-                // UPDATE BLOCK 2
-                // FIGURED IT OUT, IF YOU PASS A CHAR ARRAY TO SEND_STRING IT UTTERLY BREAKS FOR CERTAIN
-                // STRINGS, WHY? I DON'T KNOW, BUT I'M NOT GOING TO WASTE MY TIME FIGURING IT OUT
-                // THATS AN ESOS ISSUE THAT I WILL NOT BE TRYING TO DEBUG. IF I HAVE TIME I WILL
-                // RE-ADD ALL FORMATTING MESSAGES THAT MADE OUR OUTPUT LOOK PRETTY. WHY DOES
-                // OTHER SEND_STRING CALLS WORK WITH THE CHAR* ARRAYS BUT OTHERS DON'T OR JUST
-                // STRAIGHT UP OUPUT A DIFFERENT CHAR* ARRAY? WHO KNOWS, NOT ME. I'M NOT THE ESOS
-                // MAINTAINER, SORRY FOR ALL CAPS, LEFT CAPS ON AND DONT WANT TO RETYPE THIS -KS
-                // Send Message
+                // UPDATE BLOCK
+                //  Took out all this send string for command mode.
+                //  Why? Utterly breaks when LCD manager is enabled, don't ask my why
+                //  Since I can't tell you. Has to be some random ESOS crap that I'm tired
+                //  of trying to figure out. -KS
+                //  UPDATE BLOCK 2
+                //  FIGURED IT OUT, IF YOU PASS A CHAR ARRAY TO SEND_STRING IT UTTERLY BREAKS FOR CERTAIN
+                //  STRINGS, WHY? I DON'T KNOW, BUT I'M NOT GOING TO WASTE MY TIME FIGURING IT OUT
+                //  THATS AN ESOS ISSUE THAT I WILL NOT BE TRYING TO DEBUG. IF I HAVE TIME I WILL
+                //  RE-ADD ALL FORMATTING MESSAGES THAT MADE OUR OUTPUT LOOK PRETTY. WHY DOES
+                //  OTHER SEND_STRING CALLS WORK WITH THE CHAR* ARRAYS BUT OTHERS DON'T OR JUST
+                //  STRAIGHT UP OUPUT A DIFFERENT CHAR* ARRAY? WHO KNOWS, NOT ME. I'M NOT THE ESOS
+                //  MAINTAINER, SORRY FOR ALL CAPS, LEFT CAPS ON AND DONT WANT TO RETYPE THIS -KS
+                //  Send Message
                 ESOS_TASK_WAIT_ON_AVAILABLE_OUT_COMM();
-                //ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMessage); -THIS DOESN'T WORK WITH EXACT SAME STRING??? FAILS ENTIRELY IN ARRAY FORMAT, OUTPUTS PART OF OTHER CHAR* ARRAY IN CHAR* FORMAT
+                // ESOS_TASK_WAIT_ON_SEND_STRING(pch_commandMessage); -THIS DOESN'T WORK WITH EXACT SAME STRING??? FAILS ENTIRELY IN ARRAY FORMAT, OUTPUTS PART OF OTHER CHAR* ARRAY IN CHAR* FORMAT
                 ESOS_TASK_WAIT_ON_SEND_STRING("\nCommand Mode Intiated, Please Enter L to List Period\r\nOr Enter S to Set Period\r\n");
                 ESOS_TASK_SIGNAL_AVAILABLE_OUT_COMM();
                 u16t_keyTracker = 0;
@@ -1244,7 +1614,8 @@ ESOS_USER_TASK(modeSelect)
         else // OPMODE_ECHO
         {
             // Change LCD Mode
-            if(b_editPeriod)
+
+            if (b_editPeriod)
             {
                 LCD_STATE = EDIT;
             }
@@ -1252,6 +1623,7 @@ ESOS_USER_TASK(modeSelect)
             {
                 LCD_STATE = STANDBY;
             }
+
             // Check if previously in echo mode
             if (!b_echo)
             {
@@ -1439,8 +1811,6 @@ void hw_init(void)
     h_SW4 = esos_sui_registerSwitch(EDUB_SW4.u32_userData1, EDUB_SW4.u32_userData2);
     h_SW5 = esos_sui_registerSwitch(EDUB_SW5.u32_userData1, EDUB_SW5.u32_userData2);
 
-
-
     // Config LEDs
     esos_hw_sui_configLED(h_LED0);
     esos_hw_sui_configLED(h_LED1);
@@ -1485,7 +1855,6 @@ void user_init(void)
     // Initialize Hardware
     hw_init();
 
-
     // Initialize Software Structures
     initBuffer(&cb_recieve, u8t_bufferRecieve, CB_SIZE);
     initBuffer(&cb_send, u8t_bufferSend, CB_SIZE);
@@ -1503,6 +1872,6 @@ void user_init(void)
     tmr_handle_LED2 = esos_RegisterTimer(led2, u32t_led2_period);
     tmr_handle_LED3 = esos_RegisterTimer(led3, u32t_led3_period);
     tmr_handle_nucleoLED2 = esos_RegisterTimer(nucleoLED2, u32t_nucleoLED2_period);
-    //tmr_handle_commandMode = esos_RegisterTimer(commandMode, 100); For some reason this started having flipping issues on SW1 and SW3
-    //out of nowhere after more LCD logic was added. Going for direct reads now.
+    // tmr_handle_commandMode = esos_RegisterTimer(commandMode, 100); For some reason this started having flipping issues on SW1 and SW3
+    // out of nowhere after more LCD logic was added. Going for direct reads now.
 }
