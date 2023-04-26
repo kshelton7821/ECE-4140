@@ -50,7 +50,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL0_SET();
 
     //Small Delay to rid of voltage transients
-    delay(50);
+    delay(100);
 
     //Read Keys: 1, 4, 7, *
     u16t_keyVals |= (EDUB_KEY1_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEY1_OFFSET;
@@ -70,7 +70,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL1_SET();
 
     //Small Delay to rid of voltage transients
-    delay(50);
+    delay(100);
 
     //Read Keys: 2, 5, 8, 0
     u16t_keyVals |= (EDUB_KEY2_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEY2_OFFSET;
@@ -90,7 +90,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL2_SET();
 
     //Small Delay to rid of voltage transients
-    delay(50);
+    delay(100);
 
     //Read Keys: 3, 6, 9, #
     u16t_keyVals |= (EDUB_KEY3_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEY3_OFFSET;
@@ -110,7 +110,7 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL3_SET();
 
     //Small Delay to rid of voltage transients
-    delay(50);
+    delay(100);
 
     //Read Keys: A, B, C, D
     u16t_keyVals |= (EDUB_KEYA_GETVAL() >> KEYPAD_ROW0_OFFSET) << KEYPAD_KEYA_OFFSET;
@@ -123,6 +123,9 @@ uint16_t keypad_entry(void)
     EDUB_KEYPAD_COL1_CLEAR();
     EDUB_KEYPAD_COL2_CLEAR();
     EDUB_KEYPAD_COL3_CLEAR();
+
+    //Small Delay to rid of voltage transients
+    delay(100);
 
     //Return the uint16_t value
     return u16t_keyVals;

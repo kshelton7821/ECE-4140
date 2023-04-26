@@ -661,12 +661,6 @@ ESOS_USER_TASK(lcd_manager)
     ESOS_TASK_BEGIN();
     while (1)
     {
-        if (!esos_hw_sui_isSwitchPressed(h_SW1))
-        {
-            //Reset State
-            LCD_STATE = STANDBY;
-            ESOS_TASK_YIELD();
-        }
         // Get Keys
         u16t_tempKeys = keypad_entry();
 
@@ -677,6 +671,9 @@ ESOS_USER_TASK(lcd_manager)
             // the LCD manager TASK, this might could be done in a child
             // task that is seperate from the other tasks as this crap 
             // interferes with the mode selector and pretty much everything else
+
+            //MOVE THIS TO ACTIVATE IN MODE MANAGER. SPECIFICALLY FOR ANOTHER FUNCTION LIKE ENCRYPT
+
             //Enable Edit Mode
             //b_editPeriod = true;
             //LCD_STATE = EDIT;
@@ -1670,6 +1667,12 @@ void hw_init(void)
     EDUB_KEYPAD_COL1_SETUP();
     EDUB_KEYPAD_COL2_SETUP();
     EDUB_KEYPAD_COL3_SETUP();
+
+    // Set all Columns Low (possible fix for button / keypad dual reads)
+    EDUB_KEYPAD_COL0_CLEAR();
+    EDUB_KEYPAD_COL1_CLEAR();
+    EDUB_KEYPAD_COL2_CLEAR();
+    EDUB_KEYPAD_COL3_CLEAR();
 
     // Config Buttons
     esos_hw_sui_configSwitch(h_SW1);
