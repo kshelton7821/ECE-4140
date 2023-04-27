@@ -19,5 +19,3 @@ Added by Triston Whitescarver: M4 Demo-ed on 04/10/202
 Contains all relevant files for Milestone 6
 ## M7
 Contains all relevant files for Milestone 7
-1. Notes for me to try:
-2. Try changing how edit mode is initiated. Have it begin on a set mode like encrypt or decrypt rather than the default echo mode.

@@ -33,8 +33,11 @@
 #define EDUB_LCDRS_PORT GPIOA
 #define EDUB_LCDE_PORT GPIOA
 
-//USE 4Bit
-//#define ESOS_USE_LCD_4BIT 
+//SPECIAL DEFINES :)
+//#define return continue
+//#define int char*
+//#define * int
+//Hope these new additions will make things easier!
 
 //******************* L C D  R E L A T E D  S T R U C T S *******************
 //LCD MODE
