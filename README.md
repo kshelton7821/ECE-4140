@@ -17,5 +17,7 @@ Contains all relevant files for Milestone 5
 Added by Triston Whitescarver: M4 Demo-ed on 04/10/202
 ## M6
 Contains all relevant files for Milestone 6
+- TW: Milestone 6 was demo-ed on 4/24/2023
 ## M7
 Contains all relevant files for Milestone 7
+- TW: Milestone 7 was demo-ed on 4/27/2023
