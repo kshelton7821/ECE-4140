@@ -1,14 +1,8 @@
 //*** I N C L U D E S *********************************************************/
 #include "ptb.h"
-#include "vignereH.h"
-#include "circbufferH.h"
-#include "opmode.h"
-#include "esos_stm32l4_edub_4bit_lcd44780wo.h"
 
 // HARDWARE INDEPENDENCE LIBS:
-#include "esos_stm32l4_edub_sui.h"
-#include "esos_stm32l4.h"
-#include "esos_sui.h"
+#include "esos_stm32l4_edub.h"
 
 #ifdef __linux
 #include "esos_pc.h"
@@ -31,10 +25,10 @@ void __user_init_hw(void);
 #define  NUM_LEDS       5
 uint32_t au32_LEDPeriods_Ticks[NUM_LEDS] = {1000,1000,1000,1000,1000};
 ESOS_SUI_LED_HANDLE LD2;
-ESOS_SUI_LED_HANDLE LED0;
-ESOS_SUI_LED_HANDLE LED1;
-ESOS_SUI_LED_HANDLE LED2;
-ESOS_SUI_LED_HANDLE LED3;
+ESOS_SUI_LED_HANDLE h_LED0;
+ESOS_SUI_LED_HANDLE h_LED1;
+ESOS_SUI_LED_HANDLE h_LED2;
+ESOS_SUI_LED_HANDLE h_LED3;
 
 ESOS_USER_TASK(test_thread){//tests all ESOS LCD functions
     uint8_t ui8t_1string[] = {'T','e','s','t','i','n','g',' ','d','o','n','t'};
@@ -118,17 +112,17 @@ void __user_init_hw(void)
   __esos_lcd44780_init();
   esos_lcd44780_clearScreen();
 
-  LD2 = esos_sui_registerLED(LED2_PORT,LED2_PIN);
-  LED0 = esos_sui_registerLED(EDUB_LED0_PORT, EDUB_LED0_PIN);
-  LED1 = esos_sui_registerLED(EDUB_LED1_PORT, EDUB_LED1_PIN);
-  LED2 = esos_sui_registerLED(EDUB_LED2_PORT,EDUB_LED2_PIN);
-  LED3 = esos_sui_registerLED(EDUB_LED3_PORT, EDUB_LED3_PIN);
+  LD2 = esos_sui_registerLED(NUCLEO_LED2_Port,NUCLEO_LED2_Pin);
+  h_LED0 = esos_sui_registerLED(EDUB_LED0_PORT, EDUB_LED0_PIN);
+  h_LED1 = esos_sui_registerLED(EDUB_LED1_PORT, EDUB_LED1_PIN);
+  h_LED2 = esos_sui_registerLED(EDUB_LED2_PORT,EDUB_LED2_PIN);
+  h_LED3 = esos_sui_registerLED(EDUB_LED3_PORT, EDUB_LED3_PIN);
 
   esos_sui_flashLED(LD2, au32_LEDPeriods_Ticks[LD2_PERIOD]);
-  esos_sui_flashLED(LED0, au32_LEDPeriods_Ticks[LED0_PERIOD]);
-  esos_sui_flashLED(LED1, au32_LEDPeriods_Ticks[LED1_PERIOD]);
-  esos_sui_flashLED(LED2, au32_LEDPeriods_Ticks[LED2_PERIOD]);
-  esos_sui_flashLED(LED3, au32_LEDPeriods_Ticks[LED3_PERIOD]);
+  esos_sui_flashLED(h_LED0, au32_LEDPeriods_Ticks[LED0_PERIOD]);
+  esos_sui_flashLED(h_LED1, au32_LEDPeriods_Ticks[LED1_PERIOD]);
+  esos_sui_flashLED(h_LED2, au32_LEDPeriods_Ticks[LED2_PERIOD]);
+  esos_sui_flashLED(h_LED3, au32_LEDPeriods_Ticks[LED3_PERIOD]);
 }
 
 void user_init(void)
