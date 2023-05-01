@@ -1,11 +1,11 @@
 ## Quick Notes
 To edit LED Period use SW4 + D
 ## Additional Comments
-//******************** t7_app.c**********************//
+- //******************** t7_app.c**********************//
 
-//******************** I N C L U D E S ***************************************
-/*this has all teh necessary files that are needed in order to make the file work correctly */ 
-/* these files are :
+- //******************** I N C L U D E S ***************************************
+- /*this has all teh necessary files that are needed in order to make the file work correctly */ 
+- /* these files are :
 #include "ptb.h"
 #include "vigenereH.h"
 #include "circbufferH.h"
